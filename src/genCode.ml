@@ -23,6 +23,10 @@
 
 open Netlist_ast
 
+exception TypeNotMatchError
+exception TypeError
+exception OutOfRangeError
+
 let strOfArg arg = 
 	let strOfBool = function
 	| false -> "false"
@@ -38,14 +42,15 @@ let strOfArg arg =
 	| Aconst(v) -> (match v with
 		| VBit(b) -> strOfBool b
 		| VBitArray(ba) ->
-			"bitset<"^(Array.length ba)^">(string("^(strOfBitarray ba)^"))"
+			"bitset<"^(string_of_int (Array.length ba))^">(string("^
+				(strOfBitarray ba)^"))"
 		)
 
 let argType prgm = function
 | Avar(id) -> Env.find id (prgm.p_vars)
 | Aconst(v) -> (match v with
 	| VBit(_) -> TBit
-	| VBitArray(a) -> TBitArray(Array.len a))
+	| VBitArray(a) -> TBitArray(Array.length a))
 
 (***
  * Returns <res> if the types of every var in <vars> matches,
@@ -58,13 +63,13 @@ let checkTypes vars prgm =
 	| hd::tl -> check (cur && (checkAhead hd tl)) tl
 	in
 
-	if not check true (List.map (argType prgm) vars) then
+	if not (check true (List.map (argType prgm) vars)) then
 		raise TypeNotMatchError
 
 (* Helper function to shorten the calls to checkTypes *)
 let argOf ident = Avar(ident)
 
-let bitarrayLen ba = match argType ba with
+let bitarrayLen prgm ba = match argType prgm ba with
 | TBitArray(a) -> a
 | _ -> raise TypeError
 
@@ -74,7 +79,7 @@ let gen_readInputs l =
 
 let gen_printOutputs l = 
 	(List.fold_left
-		(fun cur id -> cur ^ "putchar("^id^"? '1':'0');\n") "") ^
+		(fun cur id -> cur ^ "putchar("^id^"? '1':'0');\n") "" l) ^
 		"putchar('\n');\n"
 
 let codeOfEqn (ident,exp) prgm = match exp with
@@ -82,12 +87,12 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	checkTypes [ (argOf ident);arg ] prgm;
 	(ident ^ " = " ^ (strOfArg arg) ^ ";\n")
 | Ereg(arg) ->
-	checkTypes [ (argOf ident) ; arg ] prgm;
-	(ident ^ " = " ^ (strOfArg Avar(arg)) ^ ";\n")
+	checkTypes [ (argOf ident) ; (argOf arg) ] prgm;
+	(ident ^ " = " ^ (strOfArg (Avar(arg))) ^ ";\n")
 	(* YES, we tolerate registers on BitArrays. *)
 | Enot(arg) ->
 	checkTypes [ (argOf ident) ; arg ] prgm;
-	(ident ^ " = " ^ (match argType arg with
+	(ident ^ " = " ^ (match argType prgm arg with
 		| TBit -> "!"
 		| TBitArray(_) -> "~") ^ (strOfArg arg) ^ ";\n")
 | Ebinop(op,a1,a2) -> 
@@ -101,7 +106,7 @@ let codeOfEqn (ident,exp) prgm = match exp with
 		^ (strOfArg a2) ^ ");\n")
 (** TODO check that Minijazz generates MUX (ifFalse) (ifTrue) (selector) **)
 | Emux(a1,a2,a3) -> (** a3 is the selector, and must be a TBit. **)
-	checkTypes [ a3 ; VBit(true) ] prgm ; (* Raises exn if wrong type *)
+	checkTypes [ a3 ; Aconst(VBit(true)) ] prgm ; (* Raises exn if wrong type *)
 	checkTypes [ (argOf ident) ; a1 ; a2 ] prgm;
 	(ident ^ " = " ^ "("^(strOfArg a3)^") ? " ^
 		"("^(strOfArg a2)^") : ("^(strOfArg a1)^");\n")
@@ -110,20 +115,22 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	(*TODO implement*) ""
 | Econcat(a1,a2) ->
 	(* Type checking is a bit more complex here. Not using checkTypes. *)
-	(match (argType a1, argType a2, argType (argOf ident)) with (*CHECK TYPES*)
+	(*CHECK TYPES*)
+	(match (argType prgm a1, argType prgm a2, argType prgm (argOf ident)) with
 	| TBitArray(t1),TBitArray(t2),TBitArray(tid) ->
 		if (t1 + t2 <> tid) then
 			raise TypeNotMatchError
-	| _,_,_ -> TypeNotMatchError);
+	| _,_,_ -> raise TypeNotMatchError);
 	
 	(* Benchmarking proved that using strings was faster than setting each
 	bit one after one. *)
-	ident ^ " = bitset<" ^ (bitarrayLength (argOf ident)) ^">("^
+	ident ^ " = bitset<" ^ (string_of_int (bitarrayLen prgm (argOf ident))) ^
+		">("^
 		(strOfArg a1) ^ ".to_string() + "^
 		(strOfArg a2) ^ ".to_string());\n"
 | Eslice(sBeg,sEnd,arg) -> (* NOTE we assume the indices to be *inclusive* *)
 	(* Type checking *)
-	(match (argType (argOf ident), argType arg) with
+	(match (argType prgm (argOf ident), argType prgm arg) with
 	| TBitArray(identLen), TBitArray(argLen) ->
 		if (identLen <> sEnd-sBeg+1) then
 			raise TypeNotMatchError
@@ -136,10 +143,10 @@ let codeOfEqn (ident,exp) prgm = match exp with
 		(string_of_int len)^"));\n"
 | Eselect(pos,arg) ->
 	(* Type checking *)
-	checkTypes [ (argOf ident) ; (VBit(true)) ] prgm ;
-	(match (argType arg) with
+	checkTypes [ (argOf ident) ; Aconst(VBit(true)) ] prgm ;
+	(match (argType prgm arg) with
 	| TBitArray(len) ->
 		if (pos < 0 || pos >= len) then
 			raise OutOfRangeError
 	| _ -> raise TypeNotMatchError);
-	ident ^ " = " ^ (strOfArg arg) ^ "["^pos^"];\n"
+	ident ^ " = " ^ (strOfArg arg) ^ "["^(string_of_int pos)^"];\n"

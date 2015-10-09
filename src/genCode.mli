@@ -29,15 +29,15 @@ exception OutOfRangeError
  * Generates a piece of C code which reads stdin and updates the input pins
  * gen_readInputs : inputs list -> code
  ***)
-val gen_readInputs = Netlist_ast.ident list -> string
+val gen_readInputs : Netlist_ast.ident list -> string
 (***
  * Generates a piece of C code which writes the state of the outputs to stdout
  * gen_printOutputs : outputs list -> code
  ***)
-val gen_printOutputs = Netlist_ast.ident list -> string
+val gen_printOutputs : Netlist_ast.ident list -> string
 
 (***
  * Generates a piece of C code executing the given Netlist.equation
  * codeOfEqn : equation -> code
  ***)
-val codeOfEqn = Netlist_ast.equation -> string
+val codeOfEqn : Netlist_ast.equation -> Netlist_ast.program -> string
