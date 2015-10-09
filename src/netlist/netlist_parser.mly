@@ -1,39 +1,26 @@
 %{
-(*
- * Sysdig -- netlist_parser.mly
- * ============================
- *
- * This netlist parser mainly comes from the one given for the first TD.
- * It has been modified to handle values with integers instead of bool arrays.
- *)
-
  open Netlist_ast
 
- let bit_of_string s = match s with
-  | "t" | "1" -> 1
-  | "f" | "0" -> 0
-  | _ -> raise Parsing.Parse_error
-
- let val_array_of_string s =
-   let n = String.length s - 1 in
-   let a = ref 0 in
-   for i = n downto 0 do
-     a := !a lsl 1;
-     a := !a lor (bit_of_string (String.sub s i 1))
-   done;
-   !a, n + 1
-
- let value_of_const s =
-   let n = String.length s in
-   if n = 0 then
-     raise Parsing.Parse_error
-   else if n = 1 then
-     bit_of_string s, 0
-   else
-     val_array_of_string s
+ let value_of_int n =
+   let rec aux n =
+     let b =
+       match n mod 10 with
+         | 0 -> false
+         | 1 -> true
+         | i -> Format.eprintf "Unexpected: %d@." i; raise Parsing.Parse_error
+     in
+     if n < 10 then
+       [b]
+     else
+       b::(aux (n / 10))
+   in
+   match aux n with
+     | [] -> Format.eprintf "Empty list@."; raise Parsing.Parse_error
+     | [b] -> VBit b
+     | bl -> VBitArray (Array.of_list (List.rev bl))
 %}
 
-%token <string> CONST
+%token <int> INT
 %token <string> NAME
 %token AND MUX NAND OR RAM ROM XOR REG NOT
 %token CONCAT SELECT SLICE
@@ -62,26 +49,22 @@ exp:
   | NAND x=arg y=arg { Ebinop(Nand, x, y) }
   | XOR x=arg y=arg { Ebinop(Xor, x, y) }
   | MUX x=arg y=arg z=arg { Emux(x, y, z) }
-  | ROM addr=int word=int ra=arg
+  | ROM addr=INT word=INT ra=arg
     { Erom(addr, word, ra) }
-  | RAM addr=int word=int ra=arg we=arg wa=arg data=arg
+  | RAM addr=INT word=INT ra=arg we=arg wa=arg data=arg
     { Eram(addr, word, ra, we, wa, data) }
   | CONCAT x=arg y=arg
      { Econcat(x, y) }
-  | SELECT idx=int x=arg
+  | SELECT idx=INT x=arg
      { Eselect (idx, x) }
-  | SLICE min=int max=int x=arg
+  | SLICE min=INT max=INT x=arg
      { Eslice (min, max, x) }
 
 arg:
-  | n=CONST { Aconst (value_of_const n) }
+  | n=INT { Aconst (value_of_int n) }
   | id=NAME { Avar id }
 
 var: x=NAME ty=ty_exp { (x, ty) }
 ty_exp:
-  | /*empty*/ { 0 }
-  | COLON n=int { n }
-
-int:
-  | c=CONST { int_of_string c }
-
+  | /*empty*/ { TBit }
+  | COLON n=INT { TBitArray n }

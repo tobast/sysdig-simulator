@@ -1,12 +1,4 @@
 {
-(*
- * Sysdig -- netlist_lexer.mll
- * ===========================
- *
- * Netlist lexer, from TD 1
- *)
-
-open Lexing
 open Netlist_parser
 exception Eof
 
@@ -33,17 +25,13 @@ let keyword_list =
 }
 
 rule token = parse
-    '\n'
-      { new_line lexbuf; token lexbuf }     (* skip blanks *)
-  | [' ' '\t']
-      { token lexbuf }     (* skip blanks *)
+    [' ' '\t' '\n']     { token lexbuf }     (* skip blanks *)
   | "="            { EQUAL }
   | ":"            { COLON }
   | ","            { COMMA }
-  | ['0'-'9']+ as lxm { CONST lxm }
+  | ['0'-'9']+ as lxm { INT(int_of_string lxm) }
   | ('_' ? ['A'-'Z' 'a'-'z']('_' ? ['A'-'Z' 'a'-'z' ''' '0'-'9']) * as id)
       { let s = Lexing.lexeme lexbuf in
         try List.assoc s keyword_list
         with Not_found -> NAME id }
   | eof            { EOF }
-
