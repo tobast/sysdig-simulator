@@ -82,7 +82,11 @@ let from_ast (prgm : Netlist_ast.program) =
 	| hd::tl ->
 		(try
 			let id = Hashtbl.find varsId hd in
-			edges.(vert) <- id :: edges.(vert) ;
+			(match (snd eqsArray.(id)) with
+			| Ereg(_) -> edges.(id) <- vert :: edges.(id)
+				(* If it's a register, add a reverse dependency: thus, it will
+				still be the previous value when used. *)
+			| _ -> edges.(vert) <- id :: edges.(vert)) ;
 			(* NOTE might create double edges a -> b, but we don't care *)
 			fillEdges id
 		with Not_found -> ());

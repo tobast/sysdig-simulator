@@ -21,27 +21,23 @@
  *
  **************************************************************************)
 
-(* DepGraph -- provides a way to handle and order topologically a list of
-	net_list equations, as a DAG *)
-
-type graph
-exception Combinatory_loop
-
+exception TypeNotMatchError
+exception TypeError
+exception OutOfRangeError
 
 (***
- * Imports a graph from a Netlist_ast.program
- * from_ast : program -> programGraph
+ * Generates a piece of C code which reads stdin and updates the input pins
+ * gen_readInputs : inputs list -> code
  ***)
-val from_ast : Netlist_ast.program -> graph
+val gen_readInputs = Netlist_ast.ident list -> string
+(***
+ * Generates a piece of C code which writes the state of the outputs to stdout
+ * gen_printOutputs : outputs list -> code
+ ***)
+val gen_printOutputs = Netlist_ast.ident list -> string
 
 (***
- * Creates a topologically ordered list from a graph, ie. you can process
- * the elements of the list in that order to compute the outputs
- * topological_list -> programGraph -> equation list
+ * Generates a piece of C code executing the given Netlist.equation
+ * codeOfEqn : equation -> code
  ***)
-val topological_list : graph -> Netlist_ast.equation list
-
-(***
- * Debug function, displays the graph on stdout
- ***)
-(* val dispGraph : graph -> unit *)
+val codeOfEqn = Netlist_ast.equation -> string

@@ -12,6 +12,7 @@ OBJS= netlist/netlist_ast.cmx \
 	netlist/netlist.cmx \
 	netlist/netlist_printer.cmx \
 	depGraph.cmx \
+	genCode.cmx \
 	main.cmx
 
 #########################################################################
