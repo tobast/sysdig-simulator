@@ -23,6 +23,13 @@
 
 open Netlist_ast
 
+(***
+ * Transforms a netlist by adding a "wire" between a register whose output
+ * is an output of the circuit and the actual output, ie.
+ * a -(reg)- output --> a-(reg)-(temp var)-output
+ * This enables the trick of retro-dependancy of the registers to work in this
+ * case too.
+ ***)
 let fixOutputRegisters prgm =
 	let outputsTbl = Hashtbl.create (Env.cardinal prgm.p_vars) in
 	List.iter (fun ident -> Hashtbl.add outputsTbl ident true) prgm.p_outputs;
