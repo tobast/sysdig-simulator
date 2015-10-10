@@ -57,10 +57,10 @@ let argType prgm = function
  * raises TypeNotMatchError exception otherwise.
  ***)
 let checkTypes vars prgm =
-	let checkAhead ty = List.fold_left (fun cur t -> cur && (t=ty)) true in
+	let checkNext ty tl = (List.hd tl) = ty in
 	let rec check cur = function
 	| [] | _::[] -> true
-	| hd::tl -> check (cur && (checkAhead hd tl)) tl
+	| hd::tl -> check (cur && (checkNext hd tl)) tl
 	in
 
 	if not (check true (List.map (argType prgm) vars)) then
