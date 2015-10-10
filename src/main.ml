@@ -1,6 +1,6 @@
 open Netlist_ast
 
-let prgm = Netlist.read_file "fulladder.net"
+let prgm = TransformNetlist.transform (Netlist.read_file "fulladder.net")
 
 let rec dispIdents = function 
 | [] -> ()
