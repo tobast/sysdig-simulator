@@ -73,6 +73,13 @@ let bitarrayLen prgm ba = match argType prgm ba with
 | TBitArray(a) -> a
 | _ -> raise TypeError
 
+let gen_declVars varsMap =
+	let genOne key vType cur = cur ^ (match vType with
+	| TBit -> "bool "^key^"=false;\n"
+	| TBitArray(len) -> "bitset<"^(string_of_int len)^"> "^key^";\n")
+	in
+	Env.fold genOne varsMap ""
+
 let gen_readInputs l =
 	(List.fold_left 
 		(fun cur id -> cur ^ id ^ " = getBit();\n") "" l) ^ "getchar();\n"

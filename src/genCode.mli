@@ -25,6 +25,12 @@ exception TypeNotMatchError
 exception TypeError
 exception OutOfRangeError
 
+
+(***
+ * Generates a piece of C code which declares all the variables of the program
+ * gen_declVars : variables map -> code
+ ***)
+val gen_declVars : Netlist_ast.ty Netlist_ast.Env.t -> string
 (***
  * Generates a piece of C code which reads stdin and updates the input pins
  * gen_readInputs : inputs list -> code
