@@ -1,32 +1,22 @@
 open Netlist_ast
+open Printf
 
-let prgm = TransformNetlist.transform (Netlist.read_file "fulladder.net")
+let main () =
+	if (Array.length Sys.argv) < 2 then (
+		eprintf ("Missing argument. Usage:\n%s [file.net]\n") (Sys.argv.(0));
+		exit 1
+	);
+	
+	let ast = Netlist.read_file Sys.argv.(1) in
+	(* If an exception is raised, it is self-explicit: let the user catch it.*)
+	let prgm = TransformNetlist.transform ast in
+	let graph = DepGraph.from_ast prgm in
+	let topList = DepGraph.topological_list graph in
 
-let rec dispIdents = function 
-| [] -> ()
-| hd::tl -> Printf.printf "\t%s\n" hd; dispIdents tl
-
-(*
-let () = Printf.printf "INPUT\n"; dispIdents (prgm.p_inputs);
-	Printf.printf "OUTPUT\n"; dispIdents (prgm.p_outputs)
-*)
-
-let graph = DepGraph.from_ast prgm
-let topList = DepGraph.topological_list graph
-
-let () = 
 	print_string (Skeleton.assemble
 		(GenCode.gen_declVars prgm.p_vars)
 		(GenCode.gen_readInputs prgm.p_inputs)
-		(GenCode.gen_mainLoop prgm prgm.p_eqs)
+		(GenCode.gen_mainLoop prgm topList)
 		(GenCode.gen_printOutputs prgm.p_outputs))
-	(*
-	print_string "\nINPUT VARS\n";
-	print_string (GenCode.gen_readInputs (prgm.p_inputs));
-	print_string "\nOUTPUT VARS\n";
-	print_string (GenCode.gen_printOutputs (prgm.p_outputs));
-	print_string "\nINIT VARS\n";
-	print_string (GenCode.gen_declVars prgm.p_vars);
-	print_string "\n\n\nCODE\n";
-	List.iter (fun eq -> print_string (GenCode.codeOfEqn eq prgm)) topList
-	*)
+
+let () = main ()
