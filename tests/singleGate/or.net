@@ -1,0 +1,6 @@
+INPUT a,b
+OUTPUT z
+VAR
+	a, b, z
+IN
+z = OR a b
