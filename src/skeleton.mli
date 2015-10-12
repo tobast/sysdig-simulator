@@ -21,36 +21,10 @@
  *
  **************************************************************************)
 
-exception TypeNotMatchError
-exception TypeError
-exception OutOfRangeError
-
+(* Combines fragments of code together into the executable simulator code *)
 
 (***
- * Generates a piece of C code which declares all the variables of the program
- * gen_declVars : variables map -> code
+ * Assembles the given code with a skeleton code into the full code
+ * assemble : declVars -> readInput -> mainLoop -> printOutput -> fullCode
  ***)
-val gen_declVars : Netlist_ast.ty Netlist_ast.Env.t -> string
-(***
- * Generates a piece of C code which reads stdin and updates the input pins
- * gen_readInputs : inputs list -> code
- ***)
-val gen_readInputs : Netlist_ast.ident list -> string
-(***
- * Generates a piece of C code which writes the state of the outputs to stdout
- * gen_printOutputs : outputs list -> code
- ***)
-val gen_printOutputs : Netlist_ast.ident list -> string
-
-(***
- * Generates a piece of C code executing the given Netlist.equation
- * codeOfEqn : equation -> code
- ***)
-val codeOfEqn : Netlist_ast.equation -> Netlist_ast.program -> string
-
-(***
- * Generates the C code executing the equations given, in that order.
- * gen_mainLoop : program -> equations list -> main loop code
- ***)
-val gen_mainLoop : Netlist_ast.program -> Netlist_ast.equation list -> string
-
+val assemble : string -> string -> string -> string -> string

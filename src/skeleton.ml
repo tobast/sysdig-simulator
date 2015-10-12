@@ -21,36 +21,51 @@
  *
  **************************************************************************)
 
-exception TypeNotMatchError
-exception TypeError
-exception OutOfRangeError
+let codeSkeletonParts = Array.make 5 ""
 
+let assemble declVars readInput mainLoop printOutput =
+	codeSkeletonParts.(0) ^
+	declVars ^
+	codeSkeletonParts.(1) ^
+	readInput ^
+	codeSkeletonParts.(2) ^
+	mainLoop ^
+	codeSkeletonParts.(3) ^
+	printOutput ^
+	codeSkeletonParts.(4)
 
-(***
- * Generates a piece of C code which declares all the variables of the program
- * gen_declVars : variables map -> code
- ***)
-val gen_declVars : Netlist_ast.ty Netlist_ast.Env.t -> string
-(***
- * Generates a piece of C code which reads stdin and updates the input pins
- * gen_readInputs : inputs list -> code
- ***)
-val gen_readInputs : Netlist_ast.ident list -> string
-(***
- * Generates a piece of C code which writes the state of the outputs to stdout
- * gen_printOutputs : outputs list -> code
- ***)
-val gen_printOutputs : Netlist_ast.ident list -> string
+let () =
+	codeSkeletonParts.(0) <- "#include <cstdio>
+#include <bitset>
+#include <string>
+#include <stdexcept>
+using namespace std;
 
-(***
- * Generates a piece of C code executing the given Netlist.equation
- * codeOfEqn : equation -> code
- ***)
-val codeOfEqn : Netlist_ast.equation -> Netlist_ast.program -> string
+int nbCycles;
 
-(***
- * Generates the C code executing the equations given, in that order.
- * gen_mainLoop : program -> equations list -> main loop code
- ***)
-val gen_mainLoop : Netlist_ast.program -> Netlist_ast.equation list -> string
+inline bool getBit() {
+	switch(getchar()) {
+	case '0':
+		return false;
+	case '1':
+		return true;
+	default:
+		throw invalid_argument(\"Invalid character received, expected '0' or '1'.\");
+	}
+}
 
+int main(void) {
+	scanf(\"%d\\n\", &nbCycles);
+";
+
+	codeSkeletonParts.(1) <-"
+	for(int cyc=0; cyc < nbCycles; ++cyc) {
+";
+	
+	codeSkeletonParts.(2) <- "\n\n";
+	codeSkeletonParts.(3) <- "\n\n";
+	codeSkeletonParts.(4) <- "
+	}
+
+	return 0;
+}"

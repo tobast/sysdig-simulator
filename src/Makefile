@@ -14,6 +14,7 @@ OBJS= netlist/netlist_ast.cmx \
 	transformNetlist.cmx \
 	depGraph.cmx \
 	genCode.cmx \
+	skeleton.cmx \
 	main.cmx
 
 #########################################################################

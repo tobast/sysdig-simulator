@@ -87,7 +87,7 @@ let gen_readInputs l =
 let gen_printOutputs l = 
 	(List.fold_left
 		(fun cur id -> cur ^ "putchar("^id^"? '1':'0');\n") "" l) ^
-		"putchar('\n');\n"
+		"putchar('\\n');\n"
 
 let codeOfEqn (ident,exp) prgm = match exp with
 | Earg(arg) -> 
@@ -157,3 +157,7 @@ let codeOfEqn (ident,exp) prgm = match exp with
 			raise OutOfRangeError
 	| _ -> raise TypeNotMatchError);
 	ident ^ " = " ^ (strOfArg arg) ^ "["^(string_of_int pos)^"];\n"
+
+
+let gen_mainLoop program = List.fold_left
+	(fun cur nEqn -> cur ^ (codeOfEqn nEqn program)) ""

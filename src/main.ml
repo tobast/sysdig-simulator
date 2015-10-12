@@ -6,13 +6,21 @@ let rec dispIdents = function
 | [] -> ()
 | hd::tl -> Printf.printf "\t%s\n" hd; dispIdents tl
 
+(*
 let () = Printf.printf "INPUT\n"; dispIdents (prgm.p_inputs);
 	Printf.printf "OUTPUT\n"; dispIdents (prgm.p_outputs)
+*)
 
 let graph = DepGraph.from_ast prgm
 let topList = DepGraph.topological_list graph
 
 let () = 
+	print_string (Skeleton.assemble
+		(GenCode.gen_declVars prgm.p_vars)
+		(GenCode.gen_readInputs prgm.p_inputs)
+		(GenCode.gen_mainLoop prgm prgm.p_eqs)
+		(GenCode.gen_printOutputs prgm.p_outputs))
+	(*
 	print_string "\nINPUT VARS\n";
 	print_string (GenCode.gen_readInputs (prgm.p_inputs));
 	print_string "\nOUTPUT VARS\n";
@@ -21,4 +29,4 @@ let () =
 	print_string (GenCode.gen_declVars prgm.p_vars);
 	print_string "\n\n\nCODE\n";
 	List.iter (fun eq -> print_string (GenCode.codeOfEqn eq prgm)) topList
-
+	*)
