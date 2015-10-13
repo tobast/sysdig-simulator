@@ -80,7 +80,9 @@ let gen_declVars varsMap =
 	in
 	Env.fold genOne varsMap ""
 
-let gen_readInputs l =
+let gen_readInputs = function
+| [] -> "" (* NOTE if there is no inputs, we do not expect \n's *)
+| l ->
 	(List.fold_left 
 		(fun cur id -> cur ^ id ^ " = getBit();\n") "" l) ^ "getchar();\n"
 
