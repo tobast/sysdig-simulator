@@ -129,14 +129,23 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	| TBitArray(t1),TBitArray(t2),TBitArray(tid) ->
 		if (t1 + t2 <> tid) then
 			raise TypeNotMatchError
+	| TBit,TBitArray(t),TBitArray(tid) | TBitArray(t),TBit,TBitArray(tid) ->
+		if (t + 1 <> tid) then
+			raise TypeNotMatchError
+	| TBit,TBit,TBitArray(2) -> ()
 	| _,_,_ -> raise TypeNotMatchError);
 	
+	let bitstrOfArg arg = match (argType prgm arg) with
+	| TBit -> "string("^(strOfArg arg)^" ? '1' : '0')"
+	| TBitArray(_) -> (strOfArg arg) ^ ".to_string()"
+	in
+
 	(* Benchmarking proved that using strings was faster than setting each
 	bit one after one. *)
 	ident ^ " = bitset<" ^ (string_of_int (bitarrayLen prgm (argOf ident))) ^
-		">("^
-		(strOfArg a1) ^ ".to_string() + "^
-		(strOfArg a2) ^ ".to_string());\n"
+		">("^(bitstrOfArg a1)^" + "^(bitstrOfArg a2)^")\n"
+		(*(strOfArg a1) ^ ".to_string() + "^
+		(strOfArg a2) ^ ".to_string());\n"*)
 | Eslice(sBeg,sEnd,arg) -> (* NOTE we assume the indices to be *inclusive* *)
 	(* Type checking *)
 	(match (argType prgm (argOf ident), argType prgm arg) with
