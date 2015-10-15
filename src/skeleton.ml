@@ -39,6 +39,7 @@ let () =
 #include <bitset>
 #include <string>
 #include <stdexcept>
+#include <algorithm>
 using namespace std;
 
 int nbCycles;
@@ -52,6 +53,11 @@ inline bool getBit() {
 	default:
 		throw invalid_argument(\"Invalid character received, expected '0' or '1'.\");
 	}
+}
+
+string revStr(string str) {
+	reverse(str.begin(), str.end());
+	return str;
 }
 
 int main(void) {

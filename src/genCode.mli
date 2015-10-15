@@ -33,14 +33,14 @@ exception OutOfRangeError
 val gen_declVars : Netlist_ast.ty Netlist_ast.Env.t -> string
 (***
  * Generates a piece of C code which reads stdin and updates the input pins
- * gen_readInputs : inputs list -> code
+ * gen_readInputs : program -> inputs list -> code
  ***)
-val gen_readInputs : Netlist_ast.ident list -> string
+val gen_readInputs : Netlist_ast.program -> Netlist_ast.ident list -> string
 (***
  * Generates a piece of C code which writes the state of the outputs to stdout
- * gen_printOutputs : outputs list -> code
+ * gen_printOutputs : program -> outputs list -> code
  ***)
-val gen_printOutputs : Netlist_ast.ident list -> string
+val gen_printOutputs : Netlist_ast.program -> Netlist_ast.ident list -> string
 
 (***
  * Generates a piece of C code executing the given Netlist.equation

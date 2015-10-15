@@ -42,12 +42,13 @@ let strOfArg arg =
 	| Aconst(v) -> (match v with
 		| VBit(b) -> strOfBool b
 		| VBitArray(ba) ->
-			"bitset<"^(string_of_int (Array.length ba))^">(string("^
-				(strOfBitarray ba)^"))"
+			"bitset<"^(string_of_int (Array.length ba))^">(revStr(string(\""^
+				(strOfBitarray ba)^"\")))"
 		)
 
 let argType prgm = function
-| Avar(id) -> Env.find id (prgm.p_vars)
+| Avar(id) -> (try Env.find id (prgm.p_vars)
+	with Not_found -> print_string ("Unknown var "^id^"\n"); raise Not_found)
 | Aconst(v) -> (match v with
 	| VBit(_) -> TBit
 	| VBitArray(a) -> TBitArray(Array.length a))
@@ -80,15 +81,34 @@ let gen_declVars varsMap =
 	in
 	Env.fold genOne varsMap ""
 
-let gen_readInputs = function
+let gen_readInputs prgm = function
 | [] -> "" (* NOTE if there is no inputs, we do not expect \n's *)
 | l ->
 	(List.fold_left 
-		(fun cur id -> cur ^ id ^ " = getBit();\n") "" l) ^ "getchar();\n"
+		(fun cur id -> cur ^ (match argType prgm (argOf id) with
+		| TBit -> id ^ " = getBit();\n"
+		| TBitArray(n) ->
+			let rec iter k curstr =
+				if k = n then curstr
+				else iter (k+1)
+					(curstr^id^"["^(string_of_int k)^"] = getBit();\n")
+			in
+			iter 0 ""
+		)) "" l) ^ "getchar();\n"
 
-let gen_printOutputs l = 
+let gen_printOutputs prgm l =
 	(List.fold_left
-		(fun cur id -> cur ^ "putchar("^id^"? '1':'0');\n") "" l) ^
+		(fun cur id -> cur ^ (match argType prgm (argOf id) with
+		| TBit -> "putchar("^id^"? '1':'0');\n"
+		| TBitArray(n) ->
+			let rec iter k curstr =
+				if k = n then curstr
+				else iter (k+1)
+					(curstr^"putchar("^id^"["^(string_of_int k)^
+					"] ? '1':'0');\n")
+			in
+			iter 0 ""
+		)) "" l) ^
 		"putchar('\\n');\n"
 
 let codeOfEqn (ident,exp) prgm = match exp with
@@ -136,14 +156,16 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	| _,_,_ -> raise TypeNotMatchError);
 	
 	let bitstrOfArg arg = match (argType prgm arg) with
-	| TBit -> "string("^(strOfArg arg)^" ? '1' : '0')"
+	| TBit -> "string("^(strOfArg arg)^" ? \"1\" : \"0\")"
 	| TBitArray(_) -> (strOfArg arg) ^ ".to_string()"
 	in
 
 	(* Benchmarking proved that using strings was faster than setting each
 	bit one after one. *)
+	(* WARNING! Due to the "endianness" of the bitset.to_string(), we should
+	concat with "rev(rev(b1)+rev(b2))", ie. b2+b1 ! *)
 	ident ^ " = bitset<" ^ (string_of_int (bitarrayLen prgm (argOf ident))) ^
-		">("^(bitstrOfArg a1)^" + "^(bitstrOfArg a2)^")\n"
+		">("^(bitstrOfArg a2)^" + "^(bitstrOfArg a1)^");\n"
 		(*(strOfArg a1) ^ ".to_string() + "^
 		(strOfArg a2) ^ ".to_string());\n"*)
 | Eslice(sBeg,sEnd,arg) -> (* NOTE we assume the indices to be *inclusive* *)

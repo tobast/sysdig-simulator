@@ -15,8 +15,8 @@ let main () =
 
 	print_string (Skeleton.assemble
 		(GenCode.gen_declVars prgm.p_vars)
-		(GenCode.gen_readInputs prgm.p_inputs)
+		(GenCode.gen_readInputs prgm prgm.p_inputs)
 		(GenCode.gen_mainLoop prgm topList)
-		(GenCode.gen_printOutputs prgm.p_outputs))
+		(GenCode.gen_printOutputs prgm prgm.p_outputs))
 
 let () = main ()

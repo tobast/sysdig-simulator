@@ -46,6 +46,7 @@ $(TARGET): $(YACCOBJS) $(OBJS)
 
 clean:
 	rm -f *.cmi *.cmx *.cmo *.mly.ml *.mly.mli *.o
+	@make -C netlist clean
 
 mrproper: clean
 	rm -f $(TARGET)
