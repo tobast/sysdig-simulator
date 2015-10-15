@@ -22,7 +22,7 @@ Stdin
 Stdin should consist of N+1 lines of plain text, where
 
 * The first line contains a single integer N > 0, the number of cycles to run,
-* The N following lines consists of K characters '0' or '1' to denote a LOW or HIGH input pin, in the order the input pins were declared in the net-list. K denotes the number of input pins.
+* The N following lines consists of K characters '0' or '1' to denote a LOW or HIGH input pin, in the order the input pins were declared in the net-list. K denotes the number of input pins. If some inputs are bit arrays, those are handled as if each wire of the bit array was a distinct input, starting from a[0] to a[size-1].
 
 Yet, if there is no input pin at all, *only the first line is expected* to avoid passing a lot of useless \n. Passing those \n is still accepted.
 
@@ -31,4 +31,4 @@ Stdout
 
 Stdout will consist of N lines of plain text, each one generated just after a cycle was executed.
 
-Each line consists of K' characters '0' or '1' to denote a LOW or HIGH output pin, in the order the output pins were declared in the net-list. K' denotes the number of output pins.
+Each line consists of K' characters '0' or '1' to denote a LOW or HIGH output pin, in the order the output pins were declared in the net-list. K' denotes the number of output pins. If some outputs are bit arrays, those are outputted bit by bit, starting from a[0] to a[size-1].
