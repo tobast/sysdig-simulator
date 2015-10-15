@@ -1,0 +1,8 @@
+INPUT a,b
+OUTPUT y,z
+VAR
+	a, b, n:2, y, z
+IN
+n = CONCAT a b
+y = SELECT 1 n
+z = SELECT 0 n

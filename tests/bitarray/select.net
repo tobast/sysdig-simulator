@@ -1,0 +1,8 @@
+INPUT a
+OUTPUT b1,b2,b3
+VAR
+	a:4, b1,b2,b3
+IN
+b1 = SELECT 0 a
+b2 = SELECT 1 a
+b3 = SELECT 2 a
