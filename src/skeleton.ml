@@ -24,56 +24,14 @@
 let codeSkeletonParts = Array.make 5 ""
 
 let assemble declVars readInput mainLoop printOutput =
-	codeSkeletonParts.(0) ^
-	declVars ^
-	codeSkeletonParts.(1) ^
-	readInput ^
-	codeSkeletonParts.(2) ^
-	mainLoop ^
-	codeSkeletonParts.(3) ^
-	printOutput ^
-	codeSkeletonParts.(4)
-
-let () =
-	codeSkeletonParts.(0) <- "#include <cstdio>
-#include <bitset>
-#include <string>
-#include <stdexcept>
-#include <algorithm>
-using namespace std;
-
-int nbCycles;
-
-inline bool getBit() {
-	switch(getchar()) {
-	case '0':
-		return false;
-	case '1':
-		return true;
-	default:
-		throw invalid_argument(\"Invalid character received, expected '0' or '1'.\");
-	}
-}
-
-string revStr(string str) {
-	reverse(str.begin(), str.end());
-	return str;
-}
-
-int main(void) {
-	scanf(\"%d\\n\", &nbCycles);
-";
-
-	codeSkeletonParts.(1) <-"
-	for(int cyc=0; cyc < nbCycles; ++cyc) {
-";
+	Cpp.includes ^
 	
-	codeSkeletonParts.(2) <- "\n\n";
-	codeSkeletonParts.(3) <- "\n\n";
-	codeSkeletonParts.(4) <- "
-	}
-
-	return 0;
-}
-
-"
+	Cpp.skeleton.(0) ^
+	declVars ^
+	Cpp.skeleton.(1) ^
+	readInput ^
+	Cpp.skeleton.(2) ^
+	mainLoop ^
+	Cpp.skeleton.(3) ^
+	printOutput ^
+	Cpp.skeleton.(4)

@@ -11,6 +11,7 @@ OBJS= netlist/netlist_ast.cmx \
 	netlist/netlist_lexer.mll.cmx \
 	netlist/netlist.cmx \
 	netlist/netlist_printer.cmx \
+	cpp.cmx \
 	transformNetlist.cmx \
 	depGraph.cmx \
 	genCode.cmx \
@@ -33,6 +34,9 @@ $(TARGET): $(YACCOBJS) $(OBJS)
 	([ -f "$<i" ] && $(CMP) $(CMPLIBS) $(CMPFLAGS) -c "$<i" ; /usr/bin/true)
 	$(CMP) $(CMPLIBS) $(CMPFLAGS) -c $<
 
+cpp.ml: genCpp.sh
+	bash ./genCpp.sh > cpp.ml
+
 %.mly.cmx: %.mly
 	$(YACC) $<
 	$(CMP) $(CMPLIBS) $(CMPFLAGS) -c $*.mli
@@ -45,7 +49,7 @@ $(TARGET): $(YACCOBJS) $(OBJS)
 .PHONY: clean
 
 clean:
-	rm -f *.cmi *.cmx *.cmo *.mly.ml *.mly.mli *.o
+	rm -f *.cmi *.cmx *.cmo *.mly.ml *.mly.mli *.o cpp.ml
 	@make -C netlist clean
 
 mrproper: clean
