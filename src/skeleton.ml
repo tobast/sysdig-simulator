@@ -21,8 +21,6 @@
  *
  **************************************************************************)
 
-let codeSkeletonParts = Array.make 5 ""
-
 let assemble declVars readInput mainLoop printOutput =
 	Cpp.includes ^
 	
