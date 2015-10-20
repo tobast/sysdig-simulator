@@ -99,13 +99,13 @@ let gen_readInputs prgm = function
 let gen_printOutputs prgm l =
 	(List.fold_left
 		(fun cur id -> cur ^ (match argType prgm (argOf id) with
-		| TBit -> "putchar("^id^"? '1':'0');\n"
+		| TBit -> "putchar("^id^"+'0');\n"
 		| TBitArray(n) ->
 			let rec iter k curstr =
 				if k = n then curstr
 				else iter (k+1)
 					(curstr^"putchar("^id^"["^(string_of_int k)^
-					"] ? '1':'0');\n")
+					"] + '0');\n")
 			in
 			iter 0 ""
 		)) "" l) ^
