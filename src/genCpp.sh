@@ -36,7 +36,7 @@ function genFile {
 	echo -e "\"\n\n"
 }
 
-for file in cpp/* ; do
+for file in cpp/[0-9]* ; do
 	[ -f "${file}" ] && genFile "$file"
 done
 
