@@ -29,6 +29,7 @@ all: $(TARGET)
 
 $(TARGET): $(YACCOBJS) $(OBJS)
 	$(CMP) $(CMPLIBS) $(CMPFLAGS) -o $@ $(OBJS_OUT)
+	@rm cpp.ml # Not regenerated if not deleted
 
 %.cmx: %.ml
 	([ -f "$<i" ] && $(CMP) $(CMPLIBS) $(CMPFLAGS) -c "$<i" ; /usr/bin/true)

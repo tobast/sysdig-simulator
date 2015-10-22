@@ -26,37 +26,50 @@
 # runTests.sh
 # ----------
 #
-# Runs all tests in the given directory. The directory must contains, to
+# Runs all tests in the given directories. The directories must contains, to
 # run a test named "foo", the files
 # 	- foo.net : netlist file
 # 	- foo.in : the input of the simulator
 # 	- foo.out : the expected output of the simulator
-# Usage: ./runTests.sh [directory]
+#	- foo.rom : OPTIONNAL if provided, loaded as ROM
+# Usage: ./runTests.sh [directories]
+# Eg. to run all tests : ./runTests.sh tests/*
 #
 ##########################################################################
 
 if (( $# < 1 )) ; then
-	>&2 echo -e "Missing argument. Usage:\n$0 [directory]"
+	>&2 echo -e "Missing argument. Usage:\n$0 [directories]"
 	exit 1
 fi
-
-dirname=${1%%/}
 nbErrors=0
 
-for testFile in $dirname/*.net; do
-	baseName=${testFile%%.net}
-	echo -n "${baseName}..."
+while (( $# >= 1 )); do
+	dirname=${1%%/}
+	echo "####################################"
+	echo "## ENTERING DIRECTORY ${dirname}"
+	echo "####################################"
 
-	./compile.sh $testFile "${baseName}.bin"
-	${baseName}.bin < ${baseName}.in | diff - "${baseName}.out" > /dev/null
-	if (( $? > 0 )); then
-		echo -e "\t\tFAILED."
-		let "nbErrors = nbErrors + 1"
-	else
-		echo ""
-	fi
+	for testFile in $dirname/*.net; do
+		baseName=${testFile%%.net}
+		echo -n "${baseName}..."
 
-	rm "${baseName}.bin"
+		./compile.sh $testFile "${baseName}.bin"
+		rom=""
+		if [ -f "${baseName}.rom" ]
+			then rom="${baseName}.rom"
+		fi
+
+		${baseName}.bin ${rom:+"$rom"} < ${baseName}.in | diff - "${baseName}.out" > /dev/null
+		if (( $? > 0 )); then
+			echo -e "\t\tFAILED."
+			let "nbErrors = nbErrors + 1"
+		else
+			echo ""
+		fi
+
+		rm "${baseName}.bin"
+	done
+	shift
 done
 
 if (( $nbErrors > 0 )); then
