@@ -1,0 +1,7 @@
+INPUT
+OUTPUT z
+VAR
+	a:8, z:8
+IN
+a = 0
+z = ROM 8 8 a
