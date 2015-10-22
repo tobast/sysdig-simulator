@@ -47,6 +47,27 @@ struct Memory {
 		return mem;
 	}
 
+	Memory concat(Memory& oth) {
+		Memory out(nbBits + oth.nbBits);
+		for(size_t pos=0; pos <= (nbBits-1)/elemLen; pos++)
+			out.memory[pos] = memory[pos];
+
+		int firstPos = (nbBits-1)/elemLen;
+		if(nbBits % elemLen == 0) {
+			for(size_t pos=0; pos <= (oth.nbBits-1)/elemLen; pos++)
+				out.memory[firstPos+pos+1] = oth.memory[pos];
+		}
+		else {
+			out.memory[firstPos] |= oth.memory[0] << (nbBits % elemLen);
+			for(size_t pos=1; pos <= (oth.nbBits-1)/elemLen; pos++) {
+				out.memory[firstPos+pos] = oth.memory[pos] << (nbBits%elemLen);
+				out.memory[firstPos+pos] |=oth.memory[pos-1]
+					>> (elemLen - nbBits%elemLen);
+			}
+		}
+		return out;
+	}
+
 	size_t nbBits;
 	int elemLen;
 	unsigned long* memory;
