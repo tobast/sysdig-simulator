@@ -139,7 +139,15 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	checkTypes [ (argOf ident) ; a1 ; a2 ] prgm;
 	(ident ^ " = " ^ "("^(strOfArg a3)^") ? " ^
 		"("^(strOfArg a2)^") : ("^(strOfArg a1)^");\n")
-| Erom(addrSize,wordSize,read_addr) -> (*TODO implement*) ""
+| Erom(addrSize,wordSize,read_addr) ->
+	(match argType prgm read_addr with
+	| TBitArray(l) when l = addrSize -> ()
+	| _ -> raise TypeNotMatchError) ;
+	(match argType prgm (argOf ident) with
+	| TBitArray(l) when l = wordSize -> ()
+	| _ -> raise TypeNotMatchError) ;
+	("readMemory<"^(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
+		ident^", "^(strOfArg read_addr)^", ___rom);\n")
 | Eram(addrSize,wordSize,readAddr,writeEnable,writeAddr,data) ->
 	(*TODO implement*) ""
 | Econcat(a1,a2) ->

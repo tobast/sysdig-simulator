@@ -23,6 +23,7 @@
 
 let assemble declVars readInput mainLoop printOutput =
 	Cpp.includes ^
+	Cpp.memory_vector ^
 	
 	Cpp.skeleton.(0) ^
 	declVars ^

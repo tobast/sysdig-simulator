@@ -23,6 +23,8 @@
 
 exception Combinatory_loop
 
+open Netlist_ast
+
 type vertice = { eq : Netlist_ast.equation ;
 	edges : int list }
 type graph = vertice array

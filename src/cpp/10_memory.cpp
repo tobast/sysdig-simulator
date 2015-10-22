@@ -1,3 +1,10 @@
+/* FIXME if not used, delete!
+
+######################################
+### In order to provide a working code quickly, this is not
+### used at the moment, and thus commented.
+######################################
+
 struct Memory {
 	Memory(size_t nbBits) : nbBits(nbBits) {
 		elemLen = sizeof(unsigned long) * 8;
@@ -72,3 +79,4 @@ struct Memory {
 	int elemLen;
 	unsigned long* memory;
 };
+*/
