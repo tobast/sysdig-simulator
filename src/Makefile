@@ -11,6 +11,7 @@ OBJS= netlist/netlist_ast.cmx \
 	netlist/netlist_lexer.mll.cmx \
 	netlist/netlist.cmx \
 	netlist/netlist_printer.cmx \
+	parameters.cmx \
 	cpp.cmx \
 	transformNetlist.cmx \
 	depGraph.cmx \

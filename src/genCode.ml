@@ -79,7 +79,9 @@ let gen_declVars varsMap =
 	| TBit -> "bool "^key^"=false;\n"
 	| TBitArray(len) -> "bitset<"^(string_of_int len)^"> "^key^";\n")
 	in
-	Env.fold genOne varsMap ""
+
+	"vector<bool> ___ram("^(string_of_int !(Parameters.ramSize))^", false);\n"^
+	(Env.fold genOne varsMap "")
 
 let gen_readInputs prgm = function
 | [] -> "" (* NOTE if there is no inputs, we do not expect \n's *)
@@ -109,7 +111,7 @@ let gen_printOutputs prgm l =
 			in
 			iter 0 ""
 		)) "" l) ^
-		"putchar('\\n');\n"
+		(if !Parameters.skipLines then "putchar('\\n');\n" else "")
 
 let codeOfEqn (ident,exp) prgm = match exp with
 | Earg(arg) -> 
