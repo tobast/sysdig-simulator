@@ -26,6 +26,7 @@ open Netlist_ast
 exception TypeNotMatchError
 exception TypeError
 exception OutOfRangeError
+exception UndefinedBehavior of string
 
 let strOfArg arg = 
 	let strOfBool = function
@@ -74,13 +75,48 @@ let bitarrayLen prgm ba = match argType prgm ba with
 | TBitArray(a) -> a
 | _ -> raise TypeError
 
+let gen_declMemories prgm =
+	let outTbl = Hashtbl.create 17 in
+	let hasRom = ref false in
+	let curId = ref 0 in
+	let inTable v =
+		(try let _ = Hashtbl.find outTbl v in true
+		with Not_found -> false)
+	in
+
+	List.iter
+		(fun eq -> match eq with
+		| (ident, Eram(_)) ->
+			if inTable ident then
+				raise (UndefinedBehavior("Multiple RAM access with "^ident)) ;
+			Hashtbl.add outTbl ident (!curId) ;
+			curId := !curId + 1
+		| (_, Erom(_,_,_)) -> hasRom := true
+		| _ -> ())
+		prgm.p_eqs;
+		
+	(
+	(if (!hasRom)
+		then Cpp.declareRom
+		else "")^
+	if (!curId > 0) then
+		"vector<bool> ___ram["^(string_of_int !curId)^"];"^
+		"for(int i=0; i < "^(string_of_int !curId)^"; i++)\n"^
+		"\t___ram[i].resize("^(string_of_int !(Parameters.ramSize))^
+		", false);\n"
+	else
+		"")
+	, outTbl
+
+			
+	
+
 let gen_declVars varsMap =
 	let genOne key vType cur = cur ^ (match vType with
 	| TBit -> "bool "^key^"=false;\n"
 	| TBitArray(len) -> "bitset<"^(string_of_int len)^"> "^key^";\n")
 	in
 
-	"vector<bool> ___ram("^(string_of_int !(Parameters.ramSize))^", false);\n"^
 	(Env.fold genOne varsMap "")
 
 let gen_readInputs prgm = function
@@ -113,7 +149,7 @@ let gen_printOutputs prgm l =
 		)) "" l) ^
 		(if !Parameters.skipLines then "putchar('\\n');\n" else "")
 
-let codeOfEqn (ident,exp) prgm = match exp with
+let codeOfEqn memTable (ident,exp) prgm = match exp with
 | Earg(arg) -> 
 	checkTypes [ (argOf ident);arg ] prgm;
 	(ident ^ " = " ^ (strOfArg arg) ^ ";\n")
@@ -151,7 +187,22 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	("readMemory<"^(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
 		ident^", "^(strOfArg read_addr)^", ___rom);\n")
 | Eram(addrSize,wordSize,readAddr,writeEnable,writeAddr,data) ->
-	(*TODO implement*) ""
+	(match (argType prgm readAddr, argType prgm writeAddr) with
+	| TBitArray(l),TBitArray(l2) when l = addrSize && l2 = addrSize -> ()
+	| _ -> raise TypeNotMatchError) ;
+	(match (argType prgm (argOf ident), argType prgm data) with
+	| TBitArray(l), TBitArray(l2) when l = wordSize && l2 = wordSize -> ()
+	| _ -> raise TypeNotMatchError) ;
+	checkTypes [ writeEnable ; Aconst(VBit(true)) ] prgm ;
+
+	("readMemory<"^(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
+		ident^", "^(strOfArg readAddr)^", ___ram["^
+		(string_of_int (Hashtbl.find memTable ident))^"]);\n"^
+	"if("^(strOfArg writeEnable)^")\n\twriteMemory<"^
+		(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
+		(strOfArg data)^", "^(strOfArg writeAddr)^", ___ram["^
+		(string_of_int (Hashtbl.find memTable ident))^"]);\n")
+
 | Econcat(a1,a2) ->
 	(* Type checking is a bit more complex here. Not using checkTypes. *)
 	(*CHECK TYPES*)
@@ -202,5 +253,5 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	ident ^ " = " ^ (strOfArg arg) ^ "["^(string_of_int pos)^"];\n"
 
 
-let gen_mainLoop program = List.fold_left
-	(fun cur nEqn -> cur ^ (codeOfEqn nEqn program)) ""
+let gen_mainLoop memTable program = List.fold_left
+	(fun cur nEqn -> cur ^ (codeOfEqn memTable nEqn program)) ""

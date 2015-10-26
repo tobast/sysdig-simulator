@@ -18,8 +18,3 @@ int main(int argc, char** argv) {
 	int nbCycles;
 	scanf("%d\n", &nbCycles);
 
-	vector<bool> ___rom(0,false);
-	if(argc > 1) { // 1st argument must be ROM content
-		readROM(___rom, argv[1]);
-	}
-

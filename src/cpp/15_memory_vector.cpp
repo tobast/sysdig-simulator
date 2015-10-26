@@ -26,4 +26,14 @@ template<int outlen, int addrlen> void readMemory(bitset<outlen>& out,
 		out[i] = mem[addr+i];
 }
 
+template<int wordlen, int addrlen> void writeMemory(const bitset<wordlen>& data,
+		const bitset<addrlen>& addrBS, vector<bool>& mem) {
+	unsigned long addr = addrBS.to_ulong();
+	if(addr + wordlen >= mem.size())
+		throw out_of_range("Memory write.");
+	
+	for(int i=0; i < wordlen; i++)
+		mem[addr+i] = data[i];
+}
+
 //###################### END MEMORY_VECTOR #################################### 
