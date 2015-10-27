@@ -1,0 +1,159 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[francais]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{my_listings}
+\usepackage{my_hyperref}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+
+\title{Simulateur \textsc{NetList} -- Système digital partie 1}
+\date{Rendu : 01/11/2015}
+\author{Théophile \textsc{Bastian}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Pour la partie \og simulateur \fg{} du projet, j'ai choisi d'implémenter un \emph{compilateur} \textsc{NetList} vers C++ pour des raisons de performance~; écrit en \textsc{OCaml}. L'utilisateur est alors libre d'utiliser un quelconque compilateur C++ pour obtenir un exécutable \emph{d'un circuit particulier}~; pouvant recevoir sur l'entrée standard l'état des pins d'entrée et \textit{via} ses arguments un fichier binaire de ROM~; et affichant après chaque cycle d'exécution sur la sortie standard l'état des pins de sortie. Le compilateur gère quelques options permettant de modifier légèrement le code produit.
+\end{abstract}
+
+\section{Compilation du compilateur}
+
+La compilation est réalisée par un simple appel à \lstbash{make}, nécessitant toutefois quelques dépendances :
+\begin{itemize}
+\item ocamlopt
+\item menhir, pour la compilation du parseur
+\item bash et les outils classiques d'une console Unix
+\end{itemize}
+
+Ainsi, la compilation est aisée sous Linux et Mac. Cela devrait être vrai aussi sous Windows avec un shell bash installé (tel que CygWin). Le binaire produit est \emph{simcomp}.
+
+\textbf{Attention !} Il est possible qu'il soit nécessaire, en cas de modification du code, de lancer un \lstbash{make clean && make} plutôt qu'un simple \lstbash{make}.
+
+\section{Utilisation}
+
+\subsection{Utilisation basique}
+
+Pour produire un binaire \og circuit.bin \fg{} à partir d'un fichier netlist \og circuit.net \fg{}, sans passer par l'intermédiaire C++ et en se plaçant à la racine du projet \textsc{Simcomp} compilé,
+\begin{lstlisting}[language=bash]
+./compile.sh circuit.net circuit.bin
+\end{lstlisting}
+
+\subsection{Utilisation avancée}
+
+Pour générer un code C++ (non-indenté mais à peu près lisible une fois indenté et coloré) à partir de \og circuit.net \fg{}, on utilise la commande
+\begin{lstlisting}
+./simcomp circuit.net
+\end{lstlisting}
+(en pratique compile.sh n'est presque qu'un wrapper autour de \lstbash{./simcomp \$1 | g++ -xc++ -O2 -o \$2 -}).
+\vspace{1em}
+
+Simcomp accepte quelques options (\lstbash{./simcomp [options] fichier.net}) :
+\begin{itemize}
+\item \textbf{-n} : n'affiche pas de retour de chariot (\textbackslash n) entre les sorties des différents cycles (voir section \ref{sec:i/o}).
+\item \textbf{-{}-ramSize [k : int]} : définit la taille d'une RAM à $k$ bits (voir section \ref{sec:memory}).
+\end{itemize}
+\vspace{1em}
+
+Notez que \lstbash{./compile.sh} accepte les mêmes options, placées \textbf{après} ses arguments obligatoires.
+
+\subsection{Script de test}
+
+Le script \lstbash{./runTests.sh} permet d'exécuter des tests automatiquement. Il suffit de lui passer en paramètres une liste de dossiers contenant des tests.
+
+La structure d'un test nommé \lstbash{test01} est la suivante :
+\begin{itemize}
+\item \lstbash{test01.net} : la netlist à simuler,
+\item \lstinline`test01.in` : un fichier d'input qui sera l'entrée standard du simulateur,
+\item \lstbash{test01.out} : un fichier contenant la sortie supposée du simulateur,
+\item \lstbash{test01.rom} (\emph{optionnel}) : un fichier binaire chargé en tant que ROM du programme.
+\end{itemize}
+
+Le script comparera alors la sortie espérée à la sortie effective sur chaque test, indiquant les erreurs se produisant.
+
+Toute une batterie de tests simples se trouve déjà dans \lstbash{tests/} : on peut lancer \lstbash{./runTests tests/*} comme première vérification.
+
+\subsection{Utilisation du programme compilé} \label{sec:i/o}
+
+Supposons que \lstbash{circuit.bin} soit un circuit compilé par Simcomp.
+
+\subsubsection*{Entrée standard (stdin)}
+
+Le programme attend sur son entrée standard :
+
+\begin{itemize}
+\item Sur la première ligne, un \emph{entier} $n$ : le nombre de cycles à simuler,
+\item Sur les $n$ lignes suivantes, séparées par un retour chariot (\textbackslash n) : $k$ caractères 0 ou 1, où $k$ est le nombre de bits attendus par cycle.
+\end{itemize}
+
+Les variables attendues à lors d'un cycle sont celles mentionnées dans la section \lstinline`INPUT` du NetList, dans cet ordre~; une variable \lstocaml{TBit} attendant un bit, une variable de type \lstocaml{TBitArray(p)} attendant $p$ bits.
+
+Dans le cas d'un \lstocaml{TBitArray(p)}, le premier bit entré est le bit d'indice 0 de la nappe de fils (\emph{big endian}).
+
+Dans le cas où \emph{aucune} variable n'est variable d'entrée, le programme n'attend \emph{pas} de retours de chariot, permettant de le lancer simplement avec \lstbash{echo "42" | ./circuit.bin} pour 42 cycles.
+
+\subsubsection*{Sortie standard (stdout)}
+
+Le programme écrit \emph{à la fin de chaque cycle} sur la sortie standard un caractère (0 ou 1) par bit de sortie, traitant les \lstocaml{TBitArray(p)} comme pour l'entrée, c'est-à-dire en écrivant chaque bit un à un, en commençant par le bit de poids faible.
+
+Chaque sortie de cycle est séparée par un retour de chariot (\textbackslash n) \emph{si l'option} -n n'a \emph{pas} été passée au compilateur, sinon les lignes ne sont pas séparées du tout (plus rapide).
+
+\subsubsection*{Paramètres du programme (argv)}
+
+Le programme peut éventuellement prendre en premier argument le chemin vers un fichier binaire qui sera chargé comme ROM. Si par exemple on souhaite charger dans la ROM un seul octet, \lstocaml{0b00101010}, le fichier devra contenir le caractère ASCII \og * \fg{}.
+
+Si cette ROM n'est pas fournie et que le programme tente de faire des accès ROM, il échouera en lançant une exception non rattrapée.
+
+Si cette ROM est fournie mais que le programme ne fait aucun accès ROM, elle sera simplement ignorée.
+
+\section{Fonctionnement et choix d'implémentation}
+
+\subsection{Généralités}
+
+Le choix du C++ par rapport au C (qui semblait \textit{a priori} meilleur puisque plus bas niveau comme langage de destination d'un compilateur) est principalement motivé par la bibliothèque standard comportant des \lstcpp{std::bitset} et des \lstcpp{std::vector}, à la fois bien optimisés et théoriquement sans bugs (limitant donc les risques d'erreurs dans le code final).
+
+Dans sa généralité, Simcomp fonctionne comme conseillé. Le code est transformé par le lexer et parser (légèrement transformés) en un AST, puis un graphe ayant pour sommets les équations et arrêtes les dépendances est créé. Les dépendances des registres sont retournées. Puis, les équations sont topologiquement ordonnées, et sont une à une converties en C++ à l'intérieur d'un squelette de code.
+
+\subsection{Contenu des fichiers}
+
+\begin{itemize}
+\item \textbf{cpp.ml} : généré automatiquement par \textit{genCpp.sh} à partir des fichiers dans \textit{cpp/*}, contient du code C++ sous forme de \lstocaml{string}.
+\item \textbf{cpp/skeleton/*} : le squelette pur de code allant autour du code généré (n'a aucun sens pris morceau par morceau).
+\item \textbf{cpp/[0-9]+\_*} : des morceaux de code ayant un sens lorsque isolés, comme des fonctions, etc., insérables dans le code final.
+\item \textbf{depGraph.ml} : implémentation du graphe de dépendances entre les équations et du tri topologique.
+\item \textbf{genCode.ml} : génère les différentes parties de code (entrée/sortie, déclarations de variables, équations, \ldots).
+\item \textbf{genCpp.sh} : génère \textit{cpp.ml} à partir du contenu de \textit{cpp/*}.
+\item \textbf{main.ml} : point d'entrée dans le programme, traite les paramètres et appelle le reste du code.
+\item \textbf{parameters.ml} : contient des constantes et références modifiables en tout point du code, utile pour gérer les paramètres du programme par exemple.
+\item \textbf{skeleton.ml} : assemble le code généré par \textit{genCode.ml} et celui trouvé dans \textit{cpp.ml} pour produire le code final.
+\item \textbf{transformNetlist.ml} : applique des transformations à la netlist pour gérer des cas particuliers et, éventuellement plus tard, apporter des optimisations (par exemple, gérer des NOTREG = NOT $\circ$ REG $\circ$ NOT ?). Actuellement, le cas du registre dont la sortie est une sortie de la netlist est géré par ce fichier en ajoutant un \og fil \fg{} (une variable intermédiaire inutile) permettant à l'astuce de la dépendance inverse de fonctionner.
+\end{itemize}
+
+\subsection{Modification apportées à Netlist}
+
+Les constantes \lstocaml{TBitArray} étant mal gérées dans le cas où celle-ci commence par un zéro (\textit{eg.} $00011 = [1;1] \neq [0;0;0;1;1]$). Une modification permet d'entrer les nappes constantes sous la forme \lstinline`0b00101010`, interprétées correctement.
+
+\subsection{Représentation mémoire} \label{sec:memory}
+
+Chaque variable de type \lstocaml{TBit} est un \lstcpp{bool}~; chaque \lstocaml{TBitArray(p)} est un \lstcpp{std::bitset<p>} (permettant des opérations bitwise efficaces). Les mémoires (RAM et ROM) sont quant à elles des \lstcpp{vector<bool>} (à terme, il peut être envisagé d'optimiser les mémoires en fonction de leur \lstocaml{word_size}).
+
+La mémoire ROM est initialisée à \lstcpp{false} et à la taille du fichier ROM fourni, 0 sinon. Les mémoires RAM sont également initialisées à \lstcpp{false}, de taille 256 bits par défaut, modifiable en passant \lstbash{--ramSize} au compilateur.
+
+Toutes les commandes ROM accèdent à la même mémoire~; par contre, chaque chaque commande RAM accède à une mémoire séparée. Une netlist de la forme
+\begin{lstlisting}
+a = RAM (...)
+[...]
+a = RAM (...)
+\end{lstlisting}
+menant à un comportement indéterminé (dans quel ordre mettre les lignes ?), le compilateur renvoie une erreur.
+
+\subsection{Défauts actuellement constatés}
+
+\begin{itemize}
+\item Les erreurs de compilation sont difficilement corrigées car Simcomp est particulièrement inexpressif (aucune localisation de l'erreur) : l'AST gagnerait à être décoré pour retenir la portion de code fautive.
+\end{itemize}
+\end{document}
