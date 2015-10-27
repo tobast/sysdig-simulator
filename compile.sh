@@ -39,4 +39,8 @@ if (( $# < 2 )); then
 	exit 1
 fi
 
-[ -f "$1" ] && ($COMPNL "$1" | $COMPCPP -o "$2" -xc++ -)
+in=$1
+out=$2
+shift;shift
+
+[ -f "$in" ] && ($COMPNL $* "$in" | $COMPCPP -o "$out" -xc++ -)

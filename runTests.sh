@@ -73,7 +73,7 @@ while (( $# >= 1 )); do
 done
 
 if (( $nbErrors > 0 )); then
-	echo -e "\n${nbErrors} ERRORS. Some tests failed!"
+	echo -e "\n${nbErrors} ERROR(S). Some tests failed!"
 else
 	echo -e "\nALL TESTS PASSED."
 fi
