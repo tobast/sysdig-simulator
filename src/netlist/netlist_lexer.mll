@@ -29,6 +29,7 @@ rule token = parse
   | "="            { EQUAL }
   | ":"            { COLON }
   | ","            { COMMA }
+  | "0b" (['0'-'9']+ as lxm) { BITARRAY(lxm) }
   | ['0'-'9']+ as lxm { INT(int_of_string lxm) }
   | ('_' ? ['A'-'Z' 'a'-'z']('_' ? ['A'-'Z' 'a'-'z' ''' '0'-'9']) * as id)
       { let s = Lexing.lexeme lexbuf in

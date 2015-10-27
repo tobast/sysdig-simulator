@@ -18,9 +18,25 @@
      | [] -> Format.eprintf "Empty list@."; raise Parsing.Parse_error
      | [b] -> VBit b
      | bl -> VBitArray (Array.of_list (List.rev bl))
+
+ let value_of_ba str = 
+   let len = String.length str in
+   let rec aux pos =
+     if pos = len then
+	   []
+	 else (
+       (match str.[pos] with
+	   | '0' -> false
+	   | '1' -> true
+	   | _ -> Format.eprintf "Unexpected: %d@." pos; raise Parsing.Parse_error)
+       :: (aux (pos+1))
+     )
+   in
+   VBitArray (Array.of_list (aux 0))
 %}
 
 %token <int> INT
+%token <string> BITARRAY
 %token <string> NAME
 %token AND MUX NAND OR RAM ROM XOR REG NOT
 %token CONCAT SELECT SLICE
@@ -62,6 +78,7 @@ exp:
 
 arg:
   | n=INT { Aconst (value_of_int n) }
+  | b=BITARRAY { Aconst (value_of_ba b) }
   | id=NAME { Avar id }
 
 var: x=NAME ty=ty_exp { (x, ty) }
