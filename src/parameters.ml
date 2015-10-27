@@ -25,5 +25,5 @@
  * to handle compiler options.
  **************************************************************************)
 
-let ramSize = ref 128
+let ramSize = ref 256
 let skipLines = ref true
