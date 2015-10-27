@@ -1,0 +1,6 @@
+INPUT a
+OUTPUT z
+VAR
+	a:4, z:4
+IN
+z = a

@@ -1,0 +1,6 @@
+INPUT rAddr, doWrite, wAddr, data
+OUTPUT ramVal
+VAR
+	rAddr:8, wAddr:8, data:8, doWrite, ramVal:8
+IN
+ramVal = RAM 8 8 rAddr doWrite wAddr data

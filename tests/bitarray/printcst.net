@@ -1,0 +1,6 @@
+INPUT
+OUTPUT z
+VAR
+	z:4
+IN
+z = 0b1101

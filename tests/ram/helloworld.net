@@ -1,0 +1,11 @@
+INPUT
+OUTPUT once, z
+VAR
+	a:8, z:8, data:8, once, regout, fbit
+IN
+a = 0b00000000
+data = 0b01010100
+fbit = 1
+regout = REG fbit
+once = NOT regout
+z = RAM 8 8 a once a data
