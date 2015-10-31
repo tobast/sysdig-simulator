@@ -1,0 +1,7 @@
+INPUT rAddr, doWrite, data1, data2
+OUTPUT ram2, ram1
+VAR
+	rAddr:4, data1:8, data2:16, doWrite, ram1:8, ram2:16
+IN
+ram1 = RAM 4 8 rAddr doWrite rAddr data1
+ram2 = RAM 4 16 rAddr doWrite rAddr data2
