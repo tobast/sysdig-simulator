@@ -23,6 +23,8 @@
 
 open Netlist_ast
 
+exception ErrorVarsNotExhaustive
+
 (***
  * Transforms a netlist by adding a "wire" between a register whose output
  * is an output of the circuit and the actual output, ie.
@@ -54,5 +56,61 @@ let fixOutputRegisters prgm =
 		p_inputs = prgm.p_inputs ; p_outputs = prgm.p_outputs ;
 		p_vars = nVars }
 
+(***
+ * Detects identical equations and identifies the variables implied.
+ * This is useful because minijazz tends to copy equations, eg. in
+ * x = (a xor b) and c
+ * y = (a xor b) or c
+ * a xor b is calculated twice, with two different variables...
+ ***)
+let identifyIdenticalEquations prgm =
+	let varEquiv = Hashtbl.create 17 in
+	let nVars = ref prgm.p_vars in
+	Env.iter (fun id _ -> Hashtbl.add varEquiv id id) prgm.p_vars;
+
+	let rec doSimplify cur = function
+	| [] -> cur
+	| (id,eq)::tl ->
+		let nTl = simplifyForward id eq [] tl in
+		doSimplify ((id,eq)::cur) nTl
+	and simplifyForward id eq cur = function
+	| [] -> cur
+	| ((oId,oEq) as hd)::tl ->
+		if oEq = eq then (
+			Hashtbl.add varEquiv oId id;
+			nVars := Env.remove oId !nVars;
+			simplifyForward id eq cur tl
+		) else
+			simplifyForward id eq (hd::cur) tl
+	in
+	
+	let nVar id = (try Hashtbl.find varEquiv id with 
+		Not_found -> raise ErrorVarsNotExhaustive)
+	in
+	let nArg = function
+	| Avar(id) -> Avar(nVar id)
+	| a -> a
+	in
+
+	let replaceInExp = function
+	| Earg(arg) -> Earg(nArg arg)
+	| Ereg(id) -> Ereg(nVar id)
+	| Enot(arg) -> Enot(nArg arg)
+	| Ebinop(b,a1,a2) -> Ebinop(b,nArg a1,nArg a2)
+	| Emux(a,b,c) -> Emux(nArg a, nArg b, nArg c)
+	| Erom(i1,i2,a) -> Erom(i1,i2, nArg a)
+	| Eram(i1,i2,a,b,c,d) -> Eram(i1,i2, nArg a, nArg b, nArg c, nArg d)
+	| Econcat(a,b) -> Econcat(nArg a, nArg b)
+	| Eslice(i1,i2,a) -> Eslice(i1,i2, nArg a)
+	| Eselect(i,a) -> Eselect(i, nArg a)
+	in
+
+	let nEqs = List.map (fun (id,exp) -> (id,replaceInExp exp))
+		(doSimplify [] prgm.p_eqs) in
+	{ p_eqs = nEqs ;
+		p_inputs = prgm.p_inputs ; p_outputs = prgm.p_outputs ;
+		p_vars = !nVars }
+		
+
 let transform prgm =
-	fixOutputRegisters prgm
+	identifyIdenticalEquations (fixOutputRegisters prgm)

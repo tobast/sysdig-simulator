@@ -19,13 +19,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ **************************************************************************
+ * Transforms a net_list Ast by applying various algorithms, either to fix
+ * problems or to optimize it
  **************************************************************************)
 
-(**************************
-	Transforms a net_list Ast by applying various algorithms, either to fix
-	problems or to (if implemented...) optimize it
-**************************)
-
+(***
+ * Fired when the VARS field does not contains all variables.
+ ***)
+exception ErrorVarsNotExhaustive
 
 (***
  * Applies all transformations
