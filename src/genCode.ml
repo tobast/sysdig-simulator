@@ -88,6 +88,7 @@ let gen_declMemories prgm =
 		(fun eq -> match eq with
 		| (ident, Eram(_)) ->
 			if inTable ident then
+				(* This shall never be raised, if CheckNetlist does its job. *)
 				raise (UndefinedBehavior("Multiple RAM access with "^ident)) ;
 			Hashtbl.add outTbl ident (!curId) ;
 			curId := !curId + 1

@@ -36,6 +36,15 @@ let main () =
 	processArgs Sys.argv;
 	
 	let ast = Netlist.read_file Sys.argv.((Array.length Sys.argv)-1) in
+
+	(try CheckNetlist.checkAll ast with
+	| CheckNetlist.ErrorAffectedTwice id ->
+		Printf.eprintf ("ERROR: Variable %s is affected at least twice in the same cycle.\n") id;
+		exit 1
+	| CheckNetlist.ErrorROMConsistency ->
+		Printf.eprintf ("ERROR: ROM instructions are inconsistent. All ROM calls must share the same word_size and addr_size.\n");
+		exit 1);
+
 	(* If an exception is raised, it is self-explicit: let the user catch it.*)
 	let prgm = TransformNetlist.transform ast in
 	let graph = DepGraph.from_ast prgm in
