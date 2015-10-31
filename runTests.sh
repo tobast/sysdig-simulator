@@ -42,6 +42,7 @@ if (( $# < 1 )) ; then
 	exit 1
 fi
 nbErrors=0
+nbTests=0
 
 while (( $# >= 1 )); do
 	dirname=${1%%/}
@@ -67,6 +68,8 @@ while (( $# >= 1 )); do
 			echo ""
 		fi
 
+		let "nbTests = nbTests + 1"
+
 		rm "${baseName}.bin"
 	done
 	shift
@@ -75,5 +78,5 @@ done
 if (( $nbErrors > 0 )); then
 	echo -e "\n${nbErrors} ERROR(S). Some tests failed!"
 else
-	echo -e "\nALL TESTS PASSED."
+	echo -e "\nALL ($nbTests) TESTS PASSED."
 fi
