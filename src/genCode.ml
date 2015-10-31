@@ -78,7 +78,7 @@ let bitarrayLen prgm ba = match argType prgm ba with
 let gen_declMemories prgm =
 	let outTbl = Hashtbl.create 17 in
 	let hasRom = ref false in
-	let curId = ref 0 in
+	let romWordSize = ref 0 in
 	let inTable v =
 		(try let _ = Hashtbl.find outTbl v in true
 		with Not_found -> false)
@@ -86,20 +86,23 @@ let gen_declMemories prgm =
 
 	List.iter
 		(fun eq -> match eq with
-		| (ident, Eram(_)) ->
+		| (ident, Eram(_,ws,_,_,_,_)) ->
 			if inTable ident then
 				(* This shall never be raised, if CheckNetlist does its job. *)
 				raise (UndefinedBehavior("Multiple RAM access with "^ident)) ;
-			Hashtbl.add outTbl ident (!curId) ;
-			curId := !curId + 1
-		| (_, Erom(_,_,_)) -> hasRom := true
+			Hashtbl.add outTbl ident ws ;
+		| (_, Erom(_,ws,_)) -> hasRom := true; romWordSize := ws
 		| _ -> ())
 		prgm.p_eqs;
 		
-	(
 	(if (!hasRom)
-		then Cpp.declareRom
+		then (Printf.sprintf "#define __ROM_WORD_SIZE %d" !romWordSize) ^
+			Cpp.declareRom
 		else "")^
+	(Hashtbl.fold (fun key ws cur -> cur^(Printf.sprintf
+		"vector<bitset<%d> > ___ram_%s(%d);\n" ws key !(Parameters.ramSize)))
+		outTbl "")
+	(*
 	if (!curId > 0) then
 		"vector<bool> ___ram["^(string_of_int !curId)^"];"^
 		"for(int i=0; i < "^(string_of_int !curId)^"; i++)\n"^
@@ -107,7 +110,7 @@ let gen_declMemories prgm =
 		", false);\n"
 	else
 		"")
-	, outTbl
+	, outTbl*)
 
 			
 	
@@ -150,7 +153,7 @@ let gen_printOutputs prgm l =
 		)) "" l) ^
 		(if !Parameters.skipLines then "putchar('\\n');\n" else "")
 
-let codeOfEqn memTable (ident,exp) prgm = match exp with
+let codeOfEqn (ident,exp) prgm = match exp with
 | Earg(arg) -> 
 	checkTypes [ (argOf ident);arg ] prgm;
 	(ident ^ " = " ^ (strOfArg arg) ^ ";\n")
@@ -197,12 +200,10 @@ let codeOfEqn memTable (ident,exp) prgm = match exp with
 	checkTypes [ writeEnable ; Aconst(VBit(true)) ] prgm ;
 
 	("readMemory<"^(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
-		ident^", "^(strOfArg readAddr)^", ___ram["^
-		(string_of_int (Hashtbl.find memTable ident))^"]);\n"^
+		ident^", "^(strOfArg readAddr)^", ___ram_"^ident^");\n"^
 	"if("^(strOfArg writeEnable)^")\n\twriteMemory<"^
 		(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
-		(strOfArg data)^", "^(strOfArg writeAddr)^", ___ram["^
-		(string_of_int (Hashtbl.find memTable ident))^"]);\n")
+		(strOfArg data)^", "^(strOfArg writeAddr)^", ___ram_"^ident^");\n")
 
 | Econcat(a1,a2) ->
 	(* Type checking is a bit more complex here. Not using checkTypes. *)
@@ -254,5 +255,5 @@ let codeOfEqn memTable (ident,exp) prgm = match exp with
 	ident ^ " = " ^ (strOfArg arg) ^ "["^(string_of_int pos)^"];\n"
 
 
-let gen_mainLoop memTable program = List.fold_left
-	(fun cur nEqn -> cur ^ (codeOfEqn memTable nEqn program)) ""
+let gen_mainLoop program = List.fold_left
+	(fun cur nEqn -> cur ^ (codeOfEqn nEqn program)) ""

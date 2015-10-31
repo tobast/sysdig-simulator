@@ -29,9 +29,9 @@ exception UndefinedBehavior of string
 (***
  * Generates a piece of C code which declares all the memories of the program
  * (ie. RAMs and a ROM)
- * gen_declVars : variables map -> code, RAM mapping hashtable
+ * gen_declVars : variables map -> code
  ***)
-val gen_declMemories : Netlist_ast.program -> string * (string, int) Hashtbl.t
+val gen_declMemories : Netlist_ast.program -> string
 
 (***
  * Generates a piece of C code which declares all the variables of the program
@@ -51,15 +51,13 @@ val gen_printOutputs : Netlist_ast.program -> Netlist_ast.ident list -> string
 
 (***
  * Generates a piece of C code executing the given Netlist.equation
- * codeOfEqn : memoryHashtbl -> equation -> program -> code
+ * codeOfEqn : equation -> program -> code
  ***)
-val codeOfEqn : (string,int) Hashtbl.t -> Netlist_ast.equation ->
-	Netlist_ast.program -> string
+val codeOfEqn : Netlist_ast.equation -> Netlist_ast.program -> string
 
 (***
  * Generates the C code executing the equations given, in that order.
- * gen_mainLoop : memoryHashtable ->program -> equations list -> main loop code
+ * gen_mainLoop : program -> equations list -> main loop code
  ***)
-val gen_mainLoop : (string,int) Hashtbl.t -> Netlist_ast.program ->
-	Netlist_ast.equation list -> string
+val gen_mainLoop : Netlist_ast.program -> Netlist_ast.equation list -> string
 

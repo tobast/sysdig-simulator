@@ -49,12 +49,13 @@ let main () =
 	let prgm = TransformNetlist.transform ast in
 	let graph = DepGraph.from_ast prgm in
 	let topList = DepGraph.topological_list graph in
-	let declMem,memTbl = GenCode.gen_declMemories prgm in
+	(* let declMem,memTbl = *)
+	let declMem = GenCode.gen_declMemories prgm in
 
 	print_string (Skeleton.assemble
 		(declMem ^ (GenCode.gen_declVars prgm.p_vars))
 		(GenCode.gen_readInputs prgm prgm.p_inputs)
-		(GenCode.gen_mainLoop memTbl prgm topList)
+		(GenCode.gen_mainLoop prgm topList)
 		(GenCode.gen_printOutputs prgm prgm.p_outputs))
 
 let () = main ()
