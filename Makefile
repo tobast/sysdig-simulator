@@ -1,6 +1,6 @@
 all:
 	@make -C src/
-	ln -s src/simcomp .
+	([ "`readlink simcomp`" != "src/simcomp" ] && (rm -f simcomp ; ln -s src/simcomp .)) ; true
 
 clean:
 	@make -C src/ clean
