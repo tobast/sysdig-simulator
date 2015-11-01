@@ -121,6 +121,7 @@ Dans sa généralité, Simcomp fonctionne comme conseillé. Le code est transfor
 \subsection{Contenu des fichiers}
 
 \begin{itemize}
+\item \textbf{checkNetlist.ml} : teste quelques propriétés sur la NetList fournie avant la compilation. Actuellement, teste qu'aucune variable n'est affectée deux fois dans un cycle (comportement indéterminé) et que les \lstocaml{word_size} et \lstocaml{addr_size} des accès ROM sont bien cohérents (puisqu'une seule ROM est gérée).
 \item \textbf{cpp.ml} : généré automatiquement par \textit{genCpp.sh} à partir des fichiers dans \textit{cpp/*}, contient du code C++ sous forme de \lstocaml{string}.
 \item \textbf{cpp/skeleton/*} : le squelette pur de code allant autour du code généré (n'a aucun sens pris morceau par morceau).
 \item \textbf{cpp/[0-9]+\_*} : des morceaux de code ayant un sens lorsque isolés, comme des fonctions, etc., insérables dans le code final.
@@ -130,16 +131,22 @@ Dans sa généralité, Simcomp fonctionne comme conseillé. Le code est transfor
 \item \textbf{main.ml} : point d'entrée dans le programme, traite les paramètres et appelle le reste du code.
 \item \textbf{parameters.ml} : contient des constantes et références modifiables en tout point du code, utile pour gérer les paramètres du programme par exemple.
 \item \textbf{skeleton.ml} : assemble le code généré par \textit{genCode.ml} et celui trouvé dans \textit{cpp.ml} pour produire le code final.
-\item \textbf{transformNetlist.ml} : applique des transformations à la netlist pour gérer des cas particuliers et, éventuellement plus tard, apporter des optimisations (par exemple, gérer des NOTREG = NOT $\circ$ REG $\circ$ NOT ?). Actuellement, le cas du registre dont la sortie est une sortie de la netlist est géré par ce fichier en ajoutant un \og fil \fg{} (une variable intermédiaire inutile) permettant à l'astuce de la dépendance inverse de fonctionner.
+\item \textbf{transformNetlist.ml} : applique des transformations à la netlist pour gérer des cas particuliers et certaines optimisations (voir section \ref{sec:opti}). Actuellement, le cas du registre dont la sortie est une sortie de la netlist est géré par ce fichier en ajoutant un \og fil \fg{} (une variable intermédiaire inutile) permettant à l'astuce de la dépendance inverse de fonctionner.
 \end{itemize}
 
 \subsection{Modification apportées à Netlist}
 
 Les constantes \lstocaml{TBitArray} étant mal gérées dans le cas où celle-ci commence par un zéro (\textit{eg.} $00011 = [1;1] \neq [0;0;0;1;1]$). Une modification permet d'entrer les nappes constantes sous la forme \lstinline`0b00101010`, interprétées correctement.
 
+\subsection{Optimisations apportées} \label{sec:opti}
+
+\begin{itemize}
+\item Regroupement de variables : j'ai remarqué qu'un code MiniJazz tel que \lstinline`x = (a xor b) and c ; y = (a xor b) and d` produit \emph{deux} variables intermédiaires de valeur \lstinline`a xor b`~; ainsi cette optimisation repère les variables ayant la même équation et les regroupe en une seule variable. On itère le procédé jusqu'à ne plus rien simplifier (car un renommage de variables peut rendre deux équations identiques alors qu'elles ne l'étaient pas avant).
+\end{itemize}
+
 \subsection{Représentation mémoire} \label{sec:memory}
 
-Chaque variable de type \lstocaml{TBit} est un \lstcpp{bool}~; chaque \lstocaml{TBitArray(p)} est un \lstcpp{std::bitset<p>} (permettant des opérations bitwise efficaces). Les mémoires (RAM et ROM) sont quant à elles des \lstcpp{vector<bool>} (à terme, il peut être envisagé d'optimiser les mémoires en fonction de leur \lstocaml{word_size}).
+Chaque variable de type \lstocaml{TBit} est un \lstcpp{bool}~; chaque \lstocaml{TBitArray(p)} est un \lstcpp{std::bitset<p>} (permettant des opérations bitwise efficaces). Les mémoires (RAM et ROM) de \lstocaml{word_size} $ws$ sont quant à elles des \lstcpp{vector<bitset<ws> >}.
 
 La mémoire ROM est initialisée à \lstcpp{false} et à la taille du fichier ROM fourni, 0 sinon. Les mémoires RAM sont également initialisées à \lstcpp{false}, de taille 256 bits par défaut, modifiable en passant \lstbash{--ramSize} au compilateur.
 
