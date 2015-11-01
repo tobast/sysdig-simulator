@@ -23,7 +23,7 @@
 
 open Netlist_ast
 
-exception ErrorVarsNotExhaustive
+exception ErrorVarsNotExhaustive of string
 
 (***
  * Transforms a netlist by adding a "wire" between a register whose output
@@ -88,7 +88,7 @@ let identifyIdenticalEquations prgm =
 		in
 		
 		let nVar id = (try Hashtbl.find varEquiv id with 
-			Not_found -> raise ErrorVarsNotExhaustive)
+			Not_found -> raise (ErrorVarsNotExhaustive id))
 		in
 		let nArg = function
 		| Avar(id) -> Avar(nVar id)

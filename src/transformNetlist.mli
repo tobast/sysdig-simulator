@@ -22,12 +22,18 @@
  **************************************************************************
  * Transforms a net_list Ast by applying various algorithms, either to fix
  * problems or to optimize it
+ *
+ * Current effects:
+ * ----------------
+ * - Fixes registers whose outputs are circuit outputs by adding a wire
+ * - Merges vars with the same equation
+ * - Transforms NOToREGoNOT into Enotreg
  **************************************************************************)
 
 (***
  * Fired when the VARS field does not contains all variables.
  ***)
-exception ErrorVarsNotExhaustive
+exception ErrorVarsNotExhaustive of string
 
 (***
  * Applies all transformations
