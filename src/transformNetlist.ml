@@ -111,7 +111,8 @@ let identifyIdenticalEquations prgm =
 		let nEqs = List.map (fun (id,exp) -> (id,replaceInExp exp))
 			(doSimplify [] prgm.p_eqs) in
 		({ p_eqs = nEqs ;
-			p_inputs = prgm.p_inputs ; p_outputs = prgm.p_outputs ;
+			p_inputs = (List.map nVar prgm.p_inputs) ;
+			p_outputs = (List.map nVar prgm.p_outputs) ;
 			p_vars = !nVars }, !changes)
 	in
 	
@@ -121,4 +122,10 @@ let identifyIdenticalEquations prgm =
 	!nPrgm
 
 let transform prgm =
+(*	Netlist_printer.print_program stdout prgm;
+	let nPrgm = identifyIdenticalEquations (fixOutputRegisters prgm) in
+	Netlist_printer.print_program stdout nPrgm;
+	nPrgm
+*)
 	identifyIdenticalEquations (fixOutputRegisters prgm)
+(*	fixOutputRegisters prgm*)
