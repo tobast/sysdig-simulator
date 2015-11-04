@@ -75,7 +75,17 @@ La structure d'un test nommé \lstbash{test01} est la suivante :
 
 Le script comparera alors la sortie espérée à la sortie effective sur chaque test, indiquant les erreurs se produisant.
 
-Toute une batterie de tests simples se trouve déjà dans \lstbash{tests/} : on peut lancer \lstbash{./runTests tests/*} comme première vérification.
+\subsubsection*{Tests actuels}
+
+Toute une batterie de tests se trouve déjà dans \lstbash{tests/} : on peut lancer \lstbash{./runTests tests/*} comme première vérification.
+
+Le dossier \lstbash{tests/} contient plusieurs sous-dossiers, testant chacun des aspects différents du programme. Les noms des dossiers sont assez explicites sur leur contenu, toutefois détaillons-en deux :
+
+\begin{itemize}
+\item \textbf{singleGate/} contient un test par équation possible, n'utilisant que cette commande (\lstocaml{AND} ou \lstocaml{CONCAT} par exemple), hors des commandes testées en profondeur par un dossier séparé (ram/ et rom/),
+\item \textbf{random/} contient un ensemble de tests générés aléatoirement, contenant uniquement des \lstocaml{TBit}, de grande taille. L'output espéré a été généré à partir du simulateur de Nathanaël \textsc{Courant}, développé indépendamment du mien, ainsi la probabilité que les deux codes donnent le même résultat faux est faible.
+\end{itemize}
+
 
 \subsection{Utilisation du programme compilé} \label{sec:i/o}
 
@@ -116,7 +126,7 @@ Si cette ROM est fournie mais que le programme ne fait aucun accès ROM, elle se
 
 Le choix du C++ par rapport au C (qui semblait \textit{a priori} meilleur puisque plus bas niveau comme langage de destination d'un compilateur) est principalement motivé par la bibliothèque standard comportant des \lstcpp{std::bitset} et des \lstcpp{std::vector}, à la fois bien optimisés et théoriquement sans bugs (limitant donc les risques d'erreurs dans le code final).
 
-Dans sa généralité, Simcomp fonctionne comme conseillé. Le code est transformé par le lexer et parser (légèrement transformés) en un AST, puis un graphe ayant pour sommets les équations et arrêtes les dépendances est créé. Les dépendances des registres sont retournées. Puis, les équations sont topologiquement ordonnées, et sont une à une converties en C++ à l'intérieur d'un squelette de code.
+Dans sa généralité, Simcomp fonctionne comme conseillé. Le code est transformé par le lexer et parser (légèrement transformés) en un AST, puis un graphe ayant pour sommets les équations et arrêtes les dépendances est créé. Les dépendances des registres sont retournées~; seule la \lstocaml{read_addr} est considérée comme dépendance pour \lstocaml{RAM}. Puis, les équations sont topologiquement ordonnées, et sont une à une converties en C++ à l'intérieur d'un squelette de code. Le code de lecture de RAM est placé à l'endroit décidé par le tri topologique~; l'écriture en RAM à la fin de la boucle, juste avant l'affichage des valeurs de sortie.
 
 \subsection{Contenu des fichiers}
 
