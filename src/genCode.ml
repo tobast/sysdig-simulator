@@ -138,7 +138,10 @@ let gen_readInputs prgm = function
 					(curstr^id^"["^(string_of_int k)^"] = getBit();\n")
 			in
 			iter 0 ""
-		)) "" l) ^ "getchar();\n"
+		)) "" l) ^
+		(if !(Parameters.skipLines)
+			then "getchar();\n"
+			else "")
 
 let gen_printOutputs prgm l =
 	(List.fold_left
