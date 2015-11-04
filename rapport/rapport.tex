@@ -54,7 +54,7 @@ Pour générer un code C++ (non-indenté mais à peu près lisible une fois inde
 
 Simcomp accepte quelques options (\lstbash{./simcomp [options] fichier.net}) :
 \begin{itemize}
-\item \textbf{-n} : n'affiche pas de retour de chariot (\textbackslash n) entre les sorties des différents cycles (voir section \ref{sec:i/o}).
+\item \textbf{-n} : n'affiche pas de retour de chariot (\textbackslash n) entre les sorties des différents cycles (voir section \ref{sec:i/o})~; n'attend pas de retour de chariot sur l'entrée pour séparer les cycles.
 \item \textbf{-{}-ramSize [k : int]} : définit la taille d'une RAM à $k$ bits (voir section \ref{sec:memory}).
 \end{itemize}
 \vspace{1em}
@@ -97,7 +97,7 @@ Le programme attend sur son entrée standard :
 
 \begin{itemize}
 \item Sur la première ligne, un \emph{entier} $n$ : le nombre de cycles à simuler,
-\item Sur les $n$ lignes suivantes, séparées par un retour chariot (\textbackslash n) : $k$ caractères 0 ou 1, où $k$ est le nombre de bits attendus par cycle.
+\item Sur les $n$ lignes suivantes, séparées par un retour chariot (\textbackslash n) : $k$ caractères 0 ou 1, où $k$ est le nombre de bits attendus par cycle. Si l'option -n a été passée, aucun retour de chariot n'est attendu.
 \end{itemize}
 
 Les variables attendues à lors d'un cycle sont celles mentionnées dans la section \lstinline`INPUT` du NetList, dans cet ordre~; une variable \lstocaml{TBit} attendant un bit, une variable de type \lstocaml{TBitArray(p)} attendant $p$ bits.
