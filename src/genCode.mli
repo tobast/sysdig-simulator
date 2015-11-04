@@ -53,7 +53,12 @@ val gen_printOutputs : Netlist_ast.program -> Netlist_ast.ident list -> string
  * Generates a piece of C code executing the given Netlist.equation
  * codeOfEqn : equation -> program -> code
  ***)
+(***
+ * WARNING! Must NOT be used directly.
+ ***)
+(*
 val codeOfEqn : Netlist_ast.equation -> Netlist_ast.program -> string
+*)
 
 (***
  * Generates the C code executing the equations given, in that order.

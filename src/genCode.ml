@@ -123,6 +123,8 @@ let gen_declVars varsMap =
 
 	(Env.fold genOne varsMap "")
 
+let atend = ref []
+
 let gen_readInputs prgm = function
 | [] -> "" (* NOTE if there is no inputs, we do not expect \n's *)
 | l ->
@@ -199,11 +201,13 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	| _ -> raise TypeNotMatchError) ;
 	checkTypes [ writeEnable ; Aconst(VBit(true)) ] prgm ;
 
-	("readMemory<"^(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
-		ident^", "^(strOfArg readAddr)^", ___ram_"^ident^");\n"^
-	"if("^(strOfArg writeEnable)^")\n\twriteMemory<"^
+	atend := ("if("^(strOfArg writeEnable)^")\n\twriteMemory<"^
 		(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
 		(strOfArg data)^", "^(strOfArg writeAddr)^", ___ram_"^ident^");\n")
+		:: !atend;
+
+	("readMemory<"^(string_of_int wordSize)^","^(string_of_int addrSize)^">("^
+		ident^", "^(strOfArg readAddr)^", ___ram_"^ident^");\n")
 
 | Econcat(a1,a2) ->
 	(* Type checking is a bit more complex here. Not using checkTypes. *)
@@ -255,5 +259,10 @@ let codeOfEqn (ident,exp) prgm = match exp with
 	ident ^ " = " ^ (strOfArg arg) ^ "["^(string_of_int pos)^"];\n"
 
 
-let gen_mainLoop program = List.fold_left
-	(fun cur nEqn -> cur ^ (codeOfEqn nEqn program)) ""
+let gen_mainLoop program eqs =
+	let outStr = (List.fold_left (fun cur s -> cur^s)
+		(List.fold_left
+			(fun cur nEqn -> cur ^ (codeOfEqn nEqn program)) "" eqs)
+		!atend) in
+	atend := [];
+	outStr

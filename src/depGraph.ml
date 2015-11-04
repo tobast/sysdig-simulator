@@ -49,9 +49,8 @@ let argsOfExp exp =
 		-> addArg curArgs a1 ; addArg curArgs a2
 	| Netlist_ast.Emux(a1,a2,a3)
 		-> addArg curArgs a1 ; addArg curArgs a2 ; addArg curArgs a3
-	| Netlist_ast.Eram(_,_,a1,a2,a3,a4)
-		-> addArg curArgs a1 ; addArg curArgs a2 ;
-			addArg curArgs a3 ; addArg curArgs a4
+	| Netlist_ast.Eram(_,_,a1,_,_,_) (* The 3 last are not needed *)
+		-> addArg curArgs a1
 	in
 
 	let l = ref [] in
