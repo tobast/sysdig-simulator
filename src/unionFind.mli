@@ -20,11 +20,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  **************************************************************************
- * This file contains references that are supposed to be modified by other
- * files, in order to be easy to access. This is for example used in order
- * to handle compiler options.
+ * Implements a hashtable-based union-find
  **************************************************************************)
 
-let ramSize = ref 256
-let skipLines = ref true
-let optimize = ref 1
+(***
+ * The union-find structure type
+ ***)
+
+type t
+
+exception NotInForest of string
+
+(***
+ * Creates a forest of orphaned nodes.
+ * create : elem array -> forest
+ ***)
+val create : string array -> t
+
+(***
+ * Unites two trees from the forest.
+ * union : UFstruct -> elem1 -> elem2 -> discarded elem
+ ***)
+val union : t -> string -> string -> string
+
+(***
+ * Returns true iff the elements are in the same tree. Might be a little faster
+ * than find e1 = find e2 because it does not translates the numerical IDs
+ * back to strings.
+ ***)
+val equal : t -> string -> string -> bool
+
+(***
+ * Returns the key of the element identifying the searched element.
+ * find : UFstruct -> elem -> elemRoot
+ ***)
+val find : t -> string -> string
+
