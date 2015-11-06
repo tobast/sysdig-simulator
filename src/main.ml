@@ -21,6 +21,10 @@ let processArgs args =
 				(nextParam "Expected number after --ramSize" int_of_string)
 		else if cArg = "-n" then
 			Parameters.skipLines := false
+		else if cArg = "-O0" then
+			Parameters.optimize := 0
+		else if cArg = "-O1" then
+			Parameters.optimize := 1
 		else
 			(Printf.eprintf "Warning: invalid argument %s.\n" cArg));
 
