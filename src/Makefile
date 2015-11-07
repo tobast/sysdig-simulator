@@ -34,7 +34,7 @@ $(TARGET): $(YACCOBJS) $(OBJS)
 	@rm cpp.ml # Not regenerated if not deleted
 
 %.cmx: %.ml
-	([ -f "$<i" ] && $(CMP) $(CMPLIBS) $(CMPFLAGS) -c "$<i" ; /usr/bin/true)
+	([ -f "$<i" ] && $(CMP) $(CMPLIBS) $(CMPFLAGS) -c "$<i" ; true)
 	$(CMP) $(CMPLIBS) $(CMPFLAGS) -c $<
 
 cpp.ml: genCpp.sh
