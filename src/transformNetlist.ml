@@ -64,8 +64,30 @@ let fixOutputRegisters prgm =
  * a xor b is calculated twice, with two different variables...
  ***)
 let identifyIdenticalEquations prgm =
+	let mkEqClasses eqs =
+		let out = Array.make 10 [] in
+		let expId = function
+		| Earg _ -> 0
+		| Ereg _ -> 1
+		| Enot _ -> 2
+		| Ebinop _ -> 3
+		| Emux _ -> 4
+		| Erom _ -> 5
+		| Eram _ -> 6
+		| Econcat _ -> 7
+		| Eslice _ -> 8
+		| Eselect _ -> 9
+		in
+
+		List.iter (fun (id,exp) -> let eId = expId exp in
+			out.(eId) <- (id,exp)::(out.(eId)))
+			eqs;
+		out
+	in
+
 	let iterIdentify prgm =
 		let varEquiv = Hashtbl.create 17 in
+		let eqClasses = mkEqClasses prgm.p_eqs in
 		let nVars = ref prgm.p_vars in
 		let changes = ref 0 in
 		Env.iter (fun id _ -> Hashtbl.add varEquiv id id) prgm.p_vars;
@@ -108,8 +130,13 @@ let identifyIdenticalEquations prgm =
 		| Eselect(i,a) -> Eselect(i, nArg a)
 		in
 
+(*
 		let nEqs = List.map (fun (id,exp) -> (id,replaceInExp exp))
 			(doSimplify [] prgm.p_eqs) in
+*)
+		let nEqs = List.map (fun (id,exp) -> (id, replaceInExp exp))
+			(Array.fold_left (fun processed cur -> (
+				(doSimplify [] cur)) @ processed) [] eqClasses) in
 		({ p_eqs = nEqs ;
 			p_inputs = (List.map nVar prgm.p_inputs) ;
 			p_outputs = (List.map nVar prgm.p_outputs) ;
