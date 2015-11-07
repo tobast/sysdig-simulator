@@ -64,19 +64,24 @@ let fixOutputRegisters prgm =
  * a xor b is calculated twice, with two different variables...
  ***)
 let identifyIdenticalEquations prgm =
+	Printf.eprintf "Called\n";
 	let mkEqClasses eqs =
-		let out = Array.make 10 [] in
+		let out = Array.make 13 [] in
 		let expId = function
 		| Earg _ -> 0
 		| Ereg _ -> 1
 		| Enot _ -> 2
-		| Ebinop _ -> 3
-		| Emux _ -> 4
-		| Erom _ -> 5
-		| Eram _ -> 6
-		| Econcat _ -> 7
-		| Eslice _ -> 8
-		| Eselect _ -> 9
+		| Ebinop (bop,_,_) -> (match bop with
+			| Or -> 3
+			| Xor -> 4
+			| And -> 5
+			| Nand -> 6 )
+		| Emux _ -> 7
+		| Erom _ -> 8
+		| Eram _ -> 9
+		| Econcat _ -> 10
+		| Eslice _ -> 11
+		| Eselect _ -> 12
 		in
 
 		List.iter (fun (id,exp) -> let eId = expId exp in
@@ -148,11 +153,16 @@ let identifyIdenticalEquations prgm =
 	while assign (iterIdentify !nPrgm) > 0 do () done;
 	!nPrgm
 
+let optLevel level func =
+	if level <= !Parameters.optimize
+		then func
+		else (fun k -> k)
+
 let transform prgm =
 (*	Netlist_printer.print_program stdout prgm;
 	let nPrgm = identifyIdenticalEquations (fixOutputRegisters prgm) in
 	Netlist_printer.print_program stdout nPrgm;
 	nPrgm
 *)
-	identifyIdenticalEquations (fixOutputRegisters prgm)
+	(optLevel 1 identifyIdenticalEquations) (fixOutputRegisters prgm)
 (*	fixOutputRegisters prgm*)
