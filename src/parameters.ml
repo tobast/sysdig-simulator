@@ -27,3 +27,4 @@
 
 let ramSize = ref 256
 let skipLines = ref true
+let optimize = ref 1
