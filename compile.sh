@@ -32,7 +32,7 @@
 ##########################################################################
 
 COMPNL="./simcomp"
-COMPCPP="g++ -O2"
+COMPCPP="g++ -w -O2"
 
 if (( $# < 2 )); then
 	>&2 echo -e "ERROR: Missing argument. Usage:\n$0 [filename.net] [outbinary]"
