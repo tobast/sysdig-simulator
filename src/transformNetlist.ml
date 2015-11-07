@@ -105,8 +105,6 @@ let identifyIdenticalEquations prgm =
 		| _,_ -> false
 		in
 
-
-		let modified = ref [] in (*FIXME DEBUG*)
 		let rec doSimplify cur = function
 		| [] -> cur
 		| (id,eq)::tl ->
@@ -121,19 +119,12 @@ let identifyIdenticalEquations prgm =
 				nVars := Env.remove oId !nVars;
 				*)
 				let discVar = UnionFind.union varUF oId id in
-				Printf.eprintf "\n\tSimplifying %s = %s" oId id ;
-				modified := (oId,id) :: !modified ;
 				nVars := Env.remove discVar !nVars; 
 				changes := !changes + 1;
 				simplifyForward id eq cur tl
 			) else
 				simplifyForward id eq (hd::cur) tl
 		in
-
-		let rec checkUF = function
-		| [] -> ()
-		| (a,b) :: tl -> assert (UnionFind.find varUF a = UnionFind.find varUF b) ; checkUF tl
-		in checkUF !modified;
 		
 		let nVar id = (try UnionFind.find varUF id with 
 			UnionFind.NotInForest var -> raise (ErrorVarsNotExhaustive var))
@@ -168,7 +159,7 @@ let identifyIdenticalEquations prgm =
 	let assign (pg, num) = nPrgm := pg; num in
 	let optiRounds = ref 1 in
 	while assign (iterIdentify !nPrgm) > 0 do optiRounds := !optiRounds + 1 done;
-	Printf.eprintf "Optimization rounds : %d" !optiRounds ;
+	Printf.eprintf "Optimization rounds : %d\n" !optiRounds ;
 	!nPrgm
 
 let ifOpt level funct =

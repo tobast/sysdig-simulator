@@ -53,12 +53,6 @@ let main () =
 	let prgm = TransformNetlist.transform ast in
 	let graph = DepGraph.from_ast prgm in
 	let topList = DepGraph.topological_list graph in
-
-	Netlist_printer.print_program stdout { p_vars = prgm.p_vars ;
-		p_eqs = topList;
-		p_inputs = prgm.p_inputs;
-		p_outputs = prgm.p_outputs }
-	(*
 	(* let declMem,memTbl = *)
 	let declMem = GenCode.gen_declMemories prgm in
 
@@ -67,5 +61,5 @@ let main () =
 		(GenCode.gen_readInputs prgm prgm.p_inputs)
 		(GenCode.gen_mainLoop prgm topList)
 		(GenCode.gen_printOutputs prgm prgm.p_outputs))
-*)
+
 let () = main ()
