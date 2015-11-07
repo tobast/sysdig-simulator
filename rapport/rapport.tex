@@ -8,10 +8,11 @@
 \usepackage{graphicx}
 \usepackage{my_listings}
 \usepackage{my_hyperref}
+\usepackage{math}
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 
 \title{Simulateur \textsc{NetList} -- Système digital partie 1}
-\date{Rendu : 01/11/2015}
+\date{Rendu : 08/11/2015}
 \author{Théophile \textsc{Bastian}}
 
 \begin{document}
@@ -101,7 +102,7 @@ Le programme attend sur son entrée standard :
 \item Sur les $n$ lignes suivantes, séparées par un retour chariot (\textbackslash n) : $k$ caractères 0 ou 1, où $k$ est le nombre de bits attendus par cycle. Si l'option -n a été passée, aucun retour de chariot n'est attendu.
 \end{itemize}
 
-Les variables attendues à lors d'un cycle sont celles mentionnées dans la section \lstinline`INPUT` du NetList, dans cet ordre~; une variable \lstocaml{TBit} attendant un bit, une variable de type \lstocaml{TBitArray(p)} attendant $p$ bits.
+Les variables attendues lors d'un cycle sont celles mentionnées dans la section \lstinline`INPUT` du NetList, dans cet ordre~; une variable \lstocaml{TBit} attendant un bit, une variable de type \lstocaml{TBitArray(p)} attendant $p$ bits.
 
 Dans le cas d'un \lstocaml{TBitArray(p)}, le premier bit entré est le bit d'indice 0 de la nappe de fils (\emph{big endian}).
 
@@ -147,7 +148,11 @@ Dans sa généralité, Simcomp fonctionne comme conseillé. Le code est transfor
 
 \subsection{Modification apportées à Netlist}
 
-Les constantes \lstocaml{TBitArray} étant mal gérées dans le cas où celle-ci commence par un zéro (\textit{eg.} $00011 = [1;1] \neq [0;0;0;1;1]$). Une modification permet d'entrer les nappes constantes sous la forme \lstinline`0b00101010`, interprétées correctement.
+\begin{itemize}
+\item Les constantes \lstocaml{TBitArray} étant mal gérées dans le cas où celle-ci commence par un zéro (\textit{eg.} $00011 = [1;1] \neq [0;0;0;1;1]$), une modification permet d'entrer les nappes constantes sous la forme \lstinline`0b00101010`, interprétées correctement.
+\item Faute de documentation à ce sujet, j'ai choisi de considérer que pour une porte \textbf{mux}, le bit sélecteur était le \emph{troisième} paramètre.
+\item Contrairement à ce que MiniJazz semble indiquer en compilant certains codes, j'ai choisi de supporter les opérations binaires sur les nappes de fil, qui sont en pratique effectuées sur des \lstcpp{std::bitset} optimisés dans ce but. Il en va de même pour les not et les mux. Dans le cas de ce dernier, on impose tout de même que le sélecteur soit un \lstocaml{TBit}.
+\end{itemize}
 
 \subsection{Optimisations apportées} \label{sec:opti}
 
@@ -157,7 +162,7 @@ Les constantes \lstocaml{TBitArray} étant mal gérées dans le cas où celle-ci
 
 \subsection{Représentation mémoire} \label{sec:memory}
 
-Chaque variable de type \lstocaml{TBit} est un \lstcpp{bool}~; chaque \lstocaml{TBitArray(p)} est un \lstcpp{std::bitset<p>} (permettant des opérations bitwise efficaces). Les mémoires (RAM et ROM) de \lstocaml{word_size} $ws$ sont quant à elles des \lstcpp{vector<bitset<ws> >}.
+Chaque variable de type \lstocaml{TBit} est un \lstcpp{bool}~; chaque \lstocaml{TBitArray(p)} est un \lstcpp{std::bitset<p>} (permettant des opérations bitwise efficaces). Les mémoires (RAM et ROM) de \lstocaml{word_size} $ws$ sont quant à elles des \lstcpp{std::vector<std::bitset<ws> >}.
 
 La mémoire ROM est initialisée à \lstcpp{false} et à la taille du fichier ROM fourni, 0 sinon. Les mémoires RAM sont également initialisées à \lstcpp{false}, de taille 256 bits par défaut, modifiable en passant \lstbash{--ramSize} au compilateur.
 
@@ -173,5 +178,7 @@ menant à un comportement indéterminé (dans quel ordre mettre les lignes ?), l
 
 \begin{itemize}
 \item Les erreurs de compilation sont difficilement corrigées car Simcomp est particulièrement inexpressif (aucune localisation de l'erreur) : l'AST gagnerait à être décoré pour retenir la portion de code fautive.
+\item L'optimisation regroupant des équations identiques étant nécessairement quadratique (pour chaque couple d'équations, \ldots), la compilation peut être longue pour de grosses netlists : j'atteins les 6min18 sur une netlist aléatoire de $70 000$ équations. Ainsi, il est conseillé pour de trop grosses netlists de passer l'option \lstbash{-O0} au compilateur pour désactiver les optimisations.\\
+Toutefois, regrouper les équations par type (\lstocaml{Earg, Ereg,} \ldots) avant d'appliquer cette optimisation a significativement diminué ce temps de compilation.
 \end{itemize}
 \end{document}
