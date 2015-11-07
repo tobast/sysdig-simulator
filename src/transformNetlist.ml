@@ -64,7 +64,6 @@ let fixOutputRegisters prgm =
  * a xor b is calculated twice, with two different variables...
  ***)
 let identifyIdenticalEquations prgm =
-	Printf.eprintf "Called\n";
 	let mkEqClasses eqs =
 		let out = Array.make 13 [] in
 		let expId = function
