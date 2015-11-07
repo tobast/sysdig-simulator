@@ -11,7 +11,6 @@ OBJS= netlist/netlist_ast.cmx \
 	netlist/netlist_lexer.mll.cmx \
 	netlist/netlist.cmx \
 	netlist/netlist_printer.cmx \
-	unionFind.cmx \
 	checkNetlist.cmx \
 	parameters.cmx \
 	cpp.cmx \
