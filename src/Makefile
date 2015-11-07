@@ -15,8 +15,8 @@ OBJS= netlist/netlist_ast.cmx \
 	checkNetlist.cmx \
 	parameters.cmx \
 	cpp.cmx \
-	transformNetlist.cmx \
 	depGraph.cmx \
+	transformNetlist.cmx \
 	genCode.cmx \
 	skeleton.cmx \
 	main.cmx
