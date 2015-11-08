@@ -247,9 +247,10 @@ let codeOfEqn (ident,exp) prgm = match exp with
 		else if (sBeg < 0 || sEnd >= argLen || sBeg > sEnd) then
 			raise OutOfRangeError
 	| _,_ -> raise TypeNotMatchError);
+	let argLen = bitarrayLen prgm arg in
 	let len = sEnd - sBeg + 1 in
 	ident ^ " = bitset<"^(string_of_int len)^">("^(strOfArg arg)^
-		".to_string().substr("^(string_of_int sBeg)^","^
+		".to_string().substr("^(string_of_int (argLen-sBeg-len))^","^
 		(string_of_int len)^"));\n"
 | Eselect(pos,arg) ->
 	(* Type checking *)

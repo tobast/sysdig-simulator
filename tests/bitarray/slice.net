@@ -1,0 +1,6 @@
+INPUT a
+OUTPUT z
+VAR
+	a:8, z:4
+IN
+z = SLICE 0 3 a
